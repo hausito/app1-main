@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Top Users - Melody Mint</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Additional styles specific to #topUsersList */
+    #topUsersList {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #topUsersList li {
+      background-color: #f5f5f5;
+      padding: 10px 20px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,37 +32,37 @@
 
   <div id="footer">
     <button class="footer-button" onclick="window.location.href='index.html'">
-        <img src="home.png" alt="Home">
+      <img src="home.png" alt="Home">
     </button>
     <button class="footer-button" onclick="window.location.href='tasks.html'">
-        <img src="tasks.png" alt="Tasks">
+      <img src="tasks.png" alt="Tasks">
     </button>
     <button class="footer-button" onclick="window.location.href='airdrop.html'">
-        <img src="airdrop.png" alt="Airdrop">
+      <img src="airdrop.png" alt="Airdrop">
     </button>
   </div>
 
   <script>
     async function fetchTopUsers() {
-        try {
-            const response = await fetch('/topUsers');
-            const topUsers = await response.json();
-            
-            const topUsersList = document.getElementById('topUsersList');
-            topUsersList.innerHTML = '';
+      try {
+        const response = await fetch('/topUsers');
+        const topUsers = await response.json();
+        
+        const topUsersList = document.getElementById('topUsersList');
+        topUsersList.innerHTML = '';
 
-            topUsers.forEach((user, index) => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
-                topUsersList.appendChild(listItem);
-            });
-        } catch (error) {
-            console.error('Error fetching top users:', error);
-        }
+        topUsers.slice(0, 10).forEach((user, index) => { // Slice to show only top 10 users
+          const listItem = document.createElement('li');
+          listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
+          topUsersList.appendChild(listItem);
+        });
+      } catch (error) {
+        console.error('Error fetching top users:', error);
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        fetchTopUsers();
+      fetchTopUsers();
     });
   </script>
 
