@@ -1,67 +1,95 @@
-<!DOCTYPE html>
-<html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Melody Mint</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preload" href="home.png" as="image">
-    <link rel="preload" href="tasks.png" as="image">
-    <link rel="preload" href="airdrop.png" as="image">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
+// public/game.js
+document.addEventListener('DOMContentLoaded', async () => {
+    const preloadImages = () => {
+        const images = ['home.png', 'tasks.png', 'airdrop.png'];
+        images.forEach((src) => {
+            const img = new Image();
+            img.src = src;
+        });
+    };
+    preloadImages();
+   
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const backgroundMusic = new Audio('background-music.mp3');
+    backgroundMusic.loop = true;
+    backgroundMusic.volume = 0.5;
 
-<body>
+    const startScreen = document.getElementById('startScreen');
+    const centerButton = document.getElementById('centerButton');
+    const userInfo = document.getElementById('userInfo');
+    const footer = document.getElementById('footer');
+    const userPoints = document.getElementById('points'); 
+    const userTickets = document.getElementById('tickets'); 
 
-<div id="gameContainer">
-    <canvas id="gameCanvas" width="360" height="640"></canvas>
-    <div id="startScreen">
-        <div id="buttonContainer">
-            <div id="userInfo">Username</div>
-            <div id="points">Points: Loading...</div>
-            <div id="tickets">Tickets: Loading...</div>
-            <button id="centerButton">Start Game</button>
-        </div>
-    </div>
-</div>
-<div id="footer">
-    <button class="footer-button" onclick="window.location.href='index.html'">
-        <img src="home.png" alt="Home">
-    </button>
-    <button class="footer-button" onclick="window.location.href='tasks.html'">
-        <img src="tasks.png" alt="Tasks">
-    </button>
-    <button class="footer-button" onclick="window.location.href='airdrop.html'">
-        <img src="airdrop.png" alt="Airdrop">
-    </button>
-</div>
+    // Initialize Telegram Web Apps API
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe?.user;
 
+    // Set username or fallback to "Username"
+    if (user) {
+        userInfo.textContent = user.username || `${user.first_name} ${user.last_name}`;
+    } else {
+        userInfo.textContent = 'Username';
+    }
 
-<script src="game.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', async () => {
+    let points = 0;
+    let tickets = 0; 
+
+    // Fetch initial user data (points and tickets)
+    const fetchUserData = async () => {
         try {
-            const tg = window.Telegram.WebApp;
-            const user = tg.initDataUnsafe?.user;
-            const username = user ? user.username || `${user.first_name} ${user.last_name}` : null;
-
-            if (username) {
-                const response = await fetch(`/getUserData?username=${encodeURIComponent(username)}`);
-                const data = await response.json();
-                if (data.success) {
-                    document.getElementById('points').textContent = `Points: ${data.points}`;
-                    document.getElementById('tickets').textContent = `Tickets: ${data.tickets}`;
-                } else {
-                    console.error('Failed to fetch user data:', data.error);
-                }
+            const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
+            const data = await response.json();
+            if (data.success) {
+                points = data.points;
+                tickets = data.tickets;
+                userPoints.textContent = `Points: ${points}`;
+                userTickets.textContent = `Tickets: ${tickets}`;
             } else {
-                console.error('Username not available.');
+                console.error('Failed to fetch user data:', data.error);
             }
         } catch (error) {
             console.error('Error fetching user data:', error);
         }
-    });
-</script>
+    };
 
-</body>
-</html>
- 
+    fetchUserData();
+
+    centerButton.addEventListener('click', async () => {
+        // Deduct one ticket when starting the game
+        if (tickets > 0) {
+            tickets--;
+            userTickets.textContent = `Tickets: ${tickets}`;
+
+            // Update tickets on the server
+            try {
+                const response = await fetch('/updateTickets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: userInfo.textContent, tickets }),
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    console.error('Failed to update tickets:', data.error);
+                }
+            } catch (error) {
+                console.error('Error updating tickets:', error);
+            }
+
+            startScreen.style.display = 'none';
+            footer.style.display = 'none';
+            backgroundMusic.play();
+            startGame();
+        } else {
+            alert('No more tickets available!');
+        }
+    });
+
+    const startGame = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Your game logic here
+    };
+});
