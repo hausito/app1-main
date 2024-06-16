@@ -2,7 +2,6 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -18,14 +17,14 @@ body {
     width: 100vw;
     margin: 0;
     border: none;
-    background-color: #f0f0f0;
+    background-color: transparent; /* Ensure it is transparent to show the body's background image */
 }
 
 canvas {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: white;
+    background-color: transparent; /* Make canvas background transparent */
 }
 
 #startScreen {
