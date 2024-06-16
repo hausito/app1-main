@@ -56,6 +56,27 @@ app.get('/getUserData', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+app.get('/topUsers', async (req, res) => {
+    try {
+        // Assuming you have a function to fetch top users from the database
+        const topUsers = await fetchTopUsersFromDatabase(); // Implement this function
+        
+        // Respond with the top users data in JSON format
+        res.status(200).json(topUsers);
+    } catch (error) {
+        console.error('Error fetching top users:', error);
+        res.status(500).json({ error: 'Failed to fetch top users' });
+    }
+});
+async function fetchTopUsersFromDatabase() {
+    const client = await pool.connect();
+    try {
+        const result = await client.query('SELECT username, points FROM users ORDER BY points DESC LIMIT 10');
+        return result.rows; // Assuming rows contain username and points
+    } finally {
+        client.release();
+    }
+}
 
 // Endpoint to handle saving Telegram usernames and points
 app.post('/saveUser', async (req, res) => {
