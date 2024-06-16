@@ -25,6 +25,19 @@ pool.connect((err, client, done) => {
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+// Endpoint to fetch top 10 users by high score
+app.get('/topUsers', async (req, res) => {
+    try {
+        const topUsersQuery = 'SELECT username, points FROM users ORDER BY points DESC LIMIT 10';
+        const client = await pool.connect();
+        const result = await client.query(topUsersQuery);
+        client.release();
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching top users:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // Endpoint to fetch initial user data (points and tickets)
 app.get('/getUserData', async (req, res) => {
