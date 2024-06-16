@@ -93,15 +93,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
 
-    const WHITE = '#FFFFFF';
-    const BLACK = '#000000';
-    const TILE_COLOR = BLACK;
+    const TILE_COLOR = '#000000';
     const BORDER_COLOR = '#0000FF';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
 
     const COLUMNS = 4;
-    const SEPARATOR = 5;
+    const SEPARATOR = 0; // Eliminating white space between tiles
     const VERTICAL_GAP = 5;
     const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
