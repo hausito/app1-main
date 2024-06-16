@@ -154,14 +154,6 @@ canvas {
     cursor: pointer; /* Pointer cursor on hover */
 }
 
-@media (max-width: 360px) {
-    .footer-button {
-        padding: 8px 16px;
-        margin-right: 5px;
-        font-size: 14px;
-    }
-}
-
 #content {
     flex-grow: 1; /* Ensure content takes the remaining space */
     display: flex;
