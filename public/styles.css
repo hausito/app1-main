@@ -30,6 +30,9 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #buttonContainer {
@@ -42,7 +45,7 @@ canvas {
 }
 
 #centerButton, #textButton {
-    font-family: 'YourFont', sans-serif;
+    font-family: 'Arial', sans-serif;
     padding: 15px 30px;
     margin: 10px 0; /* Space between buttons */
     background-color: #007bff; /* Your theme color */
