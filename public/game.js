@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
 
+  
     const startScreen = document.getElementById('startScreen');
     const playButton = document.getElementById('playButton');
     const tasksButton = document.getElementById('tasksButton');
@@ -22,7 +23,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const footer = document.getElementById('footer');
     const userPoints = document.getElementById('points');
     const userTickets = document.getElementById('ticketsInfo');
-    const header = document.getElementById('header'); // New line to get the header element
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchUserData();
 
-    playButton.addEventListener('click', async () => {
+ playButton.addEventListener('click', async () => {
         // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
@@ -88,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startScreen.style.display = 'none';
         footer.style.display = 'none';  // Hide footer when game starts
-        header.style.display = 'none';  // Hide header when game starts
         startMusic();
         initGame();
         gameLoop();
@@ -193,123 +192,162 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 0; i < attempts; i++) {
             const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
             const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
-            if (!tiles.some(tile => tile.x === newTileX && tile.y === newTileY)) {
+            if (!tiles.some(tile => {
+                const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
+                return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
+                    tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
+            })) {
                 tiles.push(new Tile(newTileX, newTileY));
-                return;
+                break;
             }
         }
     }
 
-    function updateGame() {
+    function handleClick(event) {
+        if (!gameRunning) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (event.clientX - rect.left) * scaleX;
+        const mouseY = (event.clientY - rect.top) * scaleY;
+
+        let clickedOnTile = false;
+        tiles.forEach(tile => {
+            if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
+                tile.startDisappearing();
+                clickedOnTile = true;
+                score++;
+                addNewTile();
+            }
+        });
+
+        if (!clickedOnTile) {
+            gameRunning = false;
+            gameOver();
+        }
+    }
+
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('touchstart', (event) => {
+        event.preventDefault();
+        const touch = event.touches[0];
+        handleClick({
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+        });
+    });
+
+    function gameLoop() {
         if (!gameRunning) return;
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        ctx.fillStyle = SKY_BLUE;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        ctx.shadowColor = SHADOW_COLOR;
-        ctx.shadowBlur = 10;
 
-        let missedTile = false;
-        for (const tile of tiles) {
+        let outOfBounds = false;
+        tiles.forEach(tile => {
             tile.move(TILE_SPEED);
-            tile.draw();
             tile.updateOpacity();
             if (tile.isOutOfBounds()) {
-                missedTile = true;
+                outOfBounds = true;
             }
+            tile.draw();
+        });
+
+        if (outOfBounds) {
+            gameRunning = false;
+            gameOver();
+            return;
         }
 
         tiles = tiles.filter(tile => tile.y < HEIGHT && tile.opacity > 0);
 
-        if (missedTile) {
-            gameRunning = false;
-            setTimeout(endGame, 200);
-        }
-
-        TILE_SPEED += SPEED_INCREMENT;
-
-        if (Math.random() < 0.02) {
+        while (tiles.length < 4) {
             addNewTile();
         }
 
-        ctx.font = '20px Arial';
-        ctx.fillStyle = 'black';
-        ctx.textAlign = 'left';
-        ctx.fillText(`Score: ${score}`, 10, 30);
-    }
+        // Draw vertical lines
+        ctx.strokeStyle = BORDER_COLOR;
+        ctx.lineWidth = 2;
+        for (let i = 1; i < COLUMNS; i++) {
+            const x = i * TILE_WIDTH;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, HEIGHT);
+            ctx.stroke();
+        }
 
-    function endGame() {
-        startScreen.style.display = 'block';
-        footer.style.display = 'block';  // Show footer when game ends
-        header.style.display = 'block';  // Show header when game ends
-
-        backgroundMusic.pause();
-        backgroundMusic.currentTime = 0;
-
-        // Update points on the server
-        fetch('/updatePoints', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username: userInfo.textContent, points: score }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                points += score;
-                userPoints.textContent = `Points: ${points}`;
-            } else {
-                console.error('Error updating points:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error updating points:', error);
-        });
-
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        ctx.fillStyle = SKY_BLUE;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-        ctx.font = '40px Arial';
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = SHADOW_COLOR;
+        ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`Game Over`, WIDTH / 2, HEIGHT / 2 - 40);
-        ctx.fillText(`Score: ${score}`, WIDTH / 2, HEIGHT / 2 + 10);
+        ctx.fillText(`SCORE: ${score}`, WIDTH / 2 + 2, 32);
+
+        ctx.fillStyle = SKY_BLUE;
+        ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
+
+        TILE_SPEED += SPEED_INCREMENT;
+
+        requestAnimationFrame(gameLoop);
     }
 
-    function gameLoop() {
-        if (gameRunning) {
-            updateGame();
-            requestAnimationFrame(gameLoop);
+    function startMusic() {
+        backgroundMusic.play().catch(function(error) {
+            console.error('Error playing audio:', error);
+        });
+    }
+
+    tg.onEvent('themeChanged', function() {
+        const themeParams = tg.themeParams;
+        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
+            document.body.style.backgroundColor = themeParams.bg_color;
         }
-    }
+    });
 
-    canvas.addEventListener('click', (event) => {
-        if (!gameRunning) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = event.clientX - rect.left;
-        const mouseY = event.clientY - rect.top;
-
-        let clickedTile = null;
-        for (const tile of tiles) {
-            if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
-                tile.startDisappearing();
-                clickedTile = tile;
-                score++;
-                break;
+    tg.ready().then(function() {
+        if (tg.themeParams) {
+            const themeParams = tg.themeParams;
+            if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
+                document.body.style.backgroundColor = themeParams.bg_color;
             }
         }
-
-        if (!clickedTile) {
-            gameRunning = false;
-            setTimeout(endGame, 200);
+        if (tg.initDataUnsafe?.user) {
+            userInfo.textContent = tg.initDataUnsafe.user.username || `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
+        } else {
+            userInfo.textContent = 'Username';
+        }
+        if (tg.initDataUnsafe?.is_explicitly_enabled) {
+            startMusic();
         }
     });
 
-    window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
+async function gameOver() {
+    // Save points to the server (if needed)
+    await saveUser(userInfo.textContent, score);
+
+    // Redirect to transition.html with score
+    const redirectURL = `transition.html?score=${score}`;
+    window.location.replace(redirectURL);
+}
+
+
+    async function saveUser(username, scoreToAdd) {
+        try {
+            const response = await fetch('/saveUser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, points: scoreToAdd }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                points = result.data.points; // Update points with the latest value from the server
+                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
+            } else {
+                console.error('Error saving user:', result.error);
+            }
+        } catch (error) {
+            console.error('Error saving user:', error);
+        }
+    }
 });
