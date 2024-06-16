@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const centerButton = document.getElementById('centerButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points'); // Added to update points in HTML
-    const userTickets = document.getElementById('tickets'); // Added to update tickets in HTML
+    const userPoints = document.getElementById('points'); 
+    const userTickets = document.getElementById('tickets'); 
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let points = 0;
-    let tickets = 0; // Added to track tickets
+    let tickets = 0; 
 
     // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
@@ -290,14 +290,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-async function gameOver() {
-    // Save points to the server
-    await saveUser(userInfo.textContent, score);
+    async function gameOver() {
+        // Save points to the server
+        await saveUser(userInfo.textContent, score);
 
-    // Immediately redirect to transition.html
-    window.location.replace(`transition.html?score=${score}`);
-}
-
+        // Immediately redirect to transition.html
+        window.location.replace(`transition.html?score=${score}`);
+    }
 
     async function saveUser(username, scoreToAdd) {
         try {
