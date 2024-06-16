@@ -1,11 +1,9 @@
 const express = require('express');
 const path = require('path');
 const { Pool } = require('pg');
-const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const TOKEN = '6750160592:AAH-hbeHm6mmswN571d3UeSkoX5v1ntvceQ'; // Replace with your bot token
 
 // PostgreSQL Connection
 const pool = new Pool({
@@ -14,9 +12,6 @@ const pool = new Pool({
         rejectUnauthorized: false,
     },
 });
-
-// Telegram Bot Initialization
-const bot = new TelegramBot(TOKEN, { polling: true });
 
 // Connect to PostgreSQL
 pool.connect((err, client, done) => {
@@ -119,21 +114,6 @@ app.post('/updateTickets', async (req, res) => {
         console.error('Error updating tickets:', err);
         res.status(500).json({ success: false, error: err.message });
     }
-});
-
-// Handle /start command
-bot.onText(/\/start/, (msg) => {
-    const chatId = msg.chat.id;
-    const username = msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`;
-    const url = 'https://t.me/your_bot_username?start=miniapp'; // Replace with your MiniApp URL
-    const options = {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: 'Open MiniApp', url: url }]
-            ]
-        }
-    };
-    bot.sendMessage(chatId, `Hello, ${username}! Click below to open the MiniApp:`, options);
 });
 
 app.listen(PORT, () => {
