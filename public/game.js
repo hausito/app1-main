@@ -1,24 +1,15 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const preloadImages = () => {
         const images = ['home.png', 'tasks.png', 'airdrop.png'];
-        images.forEach(src => {
+        images.forEach((src) => {
             const img = new Image();
             img.src = src;
         });
     };
     preloadImages();
-
+   
     const canvas = document.getElementById('gameCanvas');
-    if (!canvas) {
-        console.error('Canvas element not found');
-        return;
-    }
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        console.error('Could not get 2D context from canvas');
-        return;
-    }
-
     const backgroundMusic = new Audio('background-music.mp3');
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
@@ -27,16 +18,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const centerButton = document.getElementById('centerButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points');
-    const userTickets = document.getElementById('tickets');
-
-    let points = 0;
-    let tickets = 0;
+    const userPoints = document.getElementById('points'); 
+    const userTickets = document.getElementById('tickets'); 
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe?.user;
-    userInfo.textContent = user ? user.username || `${user.first_name} ${user.last_name}` : 'Username';
+
+    // Set username or fallback to "Username"
+    if (user) {
+        userInfo.textContent = user.username || `${user.first_name} ${user.last_name}`;
+    } else {
+        userInfo.textContent = 'Username';
+    }
+
+    let points = 0;
+    let tickets = 0; 
 
     // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
@@ -59,10 +56,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchUserData();
 
     centerButton.addEventListener('click', async () => {
+        // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
 
+            // Update tickets on the server
             try {
                 const response = await fetch('/updateTickets', {
                     method: 'POST',
@@ -85,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         startScreen.style.display = 'none';
-        footer.style.display = 'none';
+        footer.style.display = 'none';  // Hide footer when game starts
         startMusic();
         initGame();
         gameLoop();
@@ -137,12 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         isClicked(mouseX, mouseY) {
-            return (
-                this.x <= mouseX &&
-                this.x + this.width >= mouseX &&
-                this.y <= mouseY &&
-                this.y + this.height >= mouseY
-            );
+            return this.x <= mouseX && this.x + this.width >= mouseX &&
+                   this.y <= mouseY && this.y + this.height >= mouseY;
         }
 
         isOutOfBounds() {
@@ -172,7 +167,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         TILE_SPEED = isMobileDevice() ? 6 : 2;
         gameRunning = true;
 
-        startMusic();
+        backgroundMusic.play().catch(function(error) {
+            console.error('Error playing audio:', error);
+        });
     }
 
     function isMobileDevice() {
@@ -184,17 +181,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 0; i < attempts; i++) {
             const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
             const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
-            if (
-                !tiles.some(tile => {
-                    const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
-                    return (
-                        tile.y < rect.y + rect.height &&
-                        tile.y + tile.height > rect.y &&
-                        tile.x < rect.x + rect.width &&
-                        tile.x + tile.width > rect.x
-                    );
-                })
-            ) {
+            if (!tiles.some(tile => {
+                const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
+                return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
+                    tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
+            })) {
                 tiles.push(new Tile(newTileX, newTileY));
                 break;
             }
@@ -227,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     canvas.addEventListener('click', handleClick);
-    canvas.addEventListener('touchstart', event => {
+    canvas.addEventListener('touchstart', (event) => {
         event.preventDefault();
         const touch = event.touches[0];
         handleClick({
@@ -263,6 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             addNewTile();
         }
 
+        // Draw vertical lines
         ctx.strokeStyle = BORDER_COLOR;
         ctx.lineWidth = 2;
         for (let i = 1; i < COLUMNS; i++) {
@@ -287,24 +279,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function startMusic() {
-        backgroundMusic.play().catch(error => {
+        backgroundMusic.play().catch(function(error) {
             console.error('Error playing audio:', error);
         });
     }
 
-    tg.onEvent('themeChanged', function () {
+    tg.onEvent('themeChanged', function() {
         const themeParams = tg.themeParams;
         if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
             document.body.style.backgroundColor = themeParams.bg_color;
         }
     });
 
-    tg.ready().then(function () {
+    tg.ready().then(function() {
         if (tg.themeParams) {
             const themeParams = tg.themeParams;
             if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-                document.body.style.backgroundColor = themeParams
-            document.body.style.backgroundColor = themeParams.bg_color;
+                document.body.style.backgroundColor = themeParams.bg_color;
             }
         }
         if (tg.initDataUnsafe?.user) {
@@ -317,11 +308,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    async function gameOver() {
-        await saveUser(userInfo.textContent, score);
-        const redirectURL = `transition.html?score=${score}`;
-        window.location.replace(redirectURL);
-    }
+async function gameOver() {
+    // Save points to the server (if needed)
+    await saveUser(userInfo.textContent, score);
+
+    // Redirect to transition.html with score
+    const redirectURL = `transition.html?score=${score}`;
+    window.location.replace(redirectURL);
+}
+
 
     async function saveUser(username, scoreToAdd) {
         try {
@@ -335,8 +330,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const result = await response.json();
             if (result.success) {
-                points = result.data.points;
-                userPoints.textContent = `Points: ${points}`;
+                points = result.data.points; // Update points with the latest value from the server
+                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
             } else {
                 console.error('Error saving user:', result.error);
             }
