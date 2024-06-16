@@ -308,13 +308,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    async function gameOver() {
-        // Save points to the server
-        await saveUser(userInfo.textContent, score);
+async function gameOver() {
+    // Save points to the server (if needed)
+    await saveUser(userInfo.textContent, score);
 
-        // Immediately redirect to transition.html
-        window.location.replace(`index.html`);
-    }
+    // Redirect to transition.html with score
+    const redirectURL = `transition.html?score=${score}`;
+    window.location.replace(redirectURL);
+}
+
 
     async function saveUser(username, scoreToAdd) {
         try {
