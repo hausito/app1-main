@@ -5,7 +5,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const TOKEN = 'YOUR_BOT_TOKEN_HERE'; // Replace with your bot token
+const TOKEN = '6750160592:AAH-hbeHm6mmswN571d3UeSkoX5v1ntvceQ'; // Replace with your bot token
 
 // PostgreSQL Connection
 const pool = new Pool({
