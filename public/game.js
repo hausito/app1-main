@@ -304,7 +304,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await saveUser(userInfo.textContent, score);
 
         // Immediately redirect to transition.html
-        window.location.replace(`transition.html?score=${score}`);
+        window.location.replace(`index.html`);
     }
 
     async function saveUser(username, scoreToAdd) {
