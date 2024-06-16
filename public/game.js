@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchUserData();
 
- centerButton.addEventListener('click', async () => {
+    centerButton.addEventListener('click', async () => {
         // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
