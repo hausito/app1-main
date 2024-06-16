@@ -146,16 +146,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startDisappearing() {
             this.clicked = true;
+            this.opacity -= 0.05;
         }
 
         updateOpacity() {
             if (this.clicked && this.opacity > 0) {
                 this.opacity -= 0.05;
             }
-        }
-
-        isFullyDisappeared() {
-            return this.clicked && this.opacity <= 0;
         }
     }
 
@@ -256,9 +253,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
-        // Remove tiles that have fully disappeared
-        tiles = tiles.filter(tile => !tile.isFullyDisappeared());
-
         TILE_SPEED += SPEED_INCREMENT;
 
         requestAnimationFrame(gameLoop);
@@ -272,37 +266,58 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     tg.onEvent('themeChanged', function() {
         const themeParams = tg.themeParams;
-        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('255,255,255')) {
-            document.body.style.backgroundColor = `rgb(${themeParams.bg_color})`;
+        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
+            document.body.style.backgroundColor = themeParams.bg_color;
         }
     });
 
-    function gameOver() {
-        gameRunning = false;
-        backgroundMusic.pause();
-        startScreen.style.display = 'block';
-        footer.style.display = 'block';  // Show footer when game ends
-
-        // Update points and tickets on the server
-        points += score; // Add score to points
-        userPoints.textContent = `Points: ${points}`;
-        userTickets.textContent = `Tickets: ${tickets}`;
-
-        fetch('/updateUserData', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username: userInfo.textContent, points, tickets }),
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (!result.success) {
-                console.error('Error updating user data:', result.error);
+    tg.ready().then(function() {
+        if (tg.themeParams) {
+            const themeParams = tg.themeParams;
+            if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
+                document.body.style.backgroundColor = themeParams.bg_color;
             }
-        })
-        .catch(error => {
-            console.error('Error updating user data:', error);
-        });
+        }
+        if (tg.initDataUnsafe?.user) {
+            userInfo.textContent = tg.initDataUnsafe.user.username || `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
+        } else {
+            userInfo.textContent = 'Username';
+        }
+        if (tg.initDataUnsafe?.is_explicitly_enabled) {
+            startMusic();
+        }
+
+        // Expand the WebApp to full screen
+        tg.expand();
+    });
+
+    async function gameOver() {
+        // Save points to the server
+        await saveUser(userInfo.textContent, score);
+
+        // Immediately redirect to transition.html
+        window.location.replace(`index.html`);
+    }
+
+    async function saveUser(username, scoreToAdd) {
+        try {
+            const response = await fetch('/saveUser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, points: scoreToAdd }),
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                points = result.data.points; // Update points with the latest value from the server
+                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
+            } else {
+                console.error('Error saving user:', result.error);
+            }
+        } catch (error) {
+            console.error('Error saving user:', error);
+        }
     }
 });
