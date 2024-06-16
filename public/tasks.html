@@ -3,26 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tasks - Melody Mint</title>
+  <title>Top Users - Melody Mint</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <div id="content">
-    <p id="textButton">Tasks Coming Soon</p>
+    <h2>Top 10 Users</h2>
+    <ul id="topUsersList"></ul>
   </div>
+
   <div id="footer">
     <button class="footer-button" onclick="window.location.href='index.html'">
         <img src="home.png" alt="Home">
     </button>
-    <button class="footer-button" >
+    <button class="footer-button" onclick="window.location.href='tasks.html'">
         <img src="tasks.png" alt="Tasks">
     </button>
     <button class="footer-button" onclick="window.location.href='airdrop.html'">
         <img src="airdrop.png" alt="Airdrop">
     </button>
-</div>
+  </div>
 
-  <script src="game.js"></script>
+  <script>
+    async function fetchTopUsers() {
+        try {
+            const response = await fetch('/topUsers');
+            const topUsers = await response.json();
+            
+            const topUsersList = document.getElementById('topUsersList');
+            topUsersList.innerHTML = '';
+
+            topUsers.forEach((user, index) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
+                topUsersList.appendChild(listItem);
+            });
+        } catch (error) {
+            console.error('Error fetching top users:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchTopUsers();
+    });
+  </script>
+
 </body>
 </html>
