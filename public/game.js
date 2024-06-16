@@ -146,12 +146,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startDisappearing() {
             this.clicked = true;
-            this.opacity -= 0.05;
         }
 
         updateOpacity() {
             if (this.clicked && this.opacity > 0) {
                 this.opacity -= 0.05;
+                if (this.opacity <= 0) {
+                    this.opacity = 0;
+                    this.remove();
+                }
+            }
+        }
+
+        remove() {
+            const index = tiles.indexOf(this);
+            if (index > -1) {
+                tiles.splice(index, 1);
             }
         }
     }
