@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const footer = document.getElementById('footer');
     const userPoints = document.getElementById('points');
     const userTickets = document.getElementById('ticketsInfo');
+    const header = document.getElementById('header');
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -87,7 +88,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         startScreen.style.display = 'none';
-        footer.style.display = 'none';  // Hide footer when game starts
+        footer.style.display = 'none'; 
+        header.style.display = 'none'; // Hide footer when game starts
         startMusic();
         initGame();
         gameLoop();
