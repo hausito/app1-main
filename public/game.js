@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const img = new Image();
             img.src = src;
         });
-    };
+    }; 
     preloadImages();
 
     const canvas = document.getElementById('gameCanvas');
