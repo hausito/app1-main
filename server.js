@@ -69,8 +69,7 @@ app.get('/getUserData', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
-
-// Endpoint to handle saving Telegram usernames and points
+// Endpoint to save user's score and update max_score if necessary
 app.post('/saveUser', async (req, res) => {
     const { username, points } = req.body;
 
@@ -80,19 +79,34 @@ app.post('/saveUser', async (req, res) => {
 
     try {
         const client = await pool.connect();
+
+        // Check if the user exists
         const existingUser = await client.query('SELECT * FROM users WHERE username = $1', [username]);
 
         if (existingUser.rows.length > 0) {
-            // User exists, update points
-            const updateQuery = 'UPDATE users SET points = points + $1 WHERE username = $2 RETURNING *';
-            const updateValues = [points, username];
-            const result = await client.query(updateQuery, updateValues);
-            client.release();
-            res.status(200).json({ success: true, data: result.rows[0] });
+            // User exists, update points and check max_score
+            const currentPoints = existingUser.rows[0].points;
+            const currentMaxScore = existingUser.rows[0].max_score || 0;
+
+            if (points > currentMaxScore) {
+                // Update max_score if the current score is higher
+                const updateMaxScoreQuery = 'UPDATE users SET points = $1, max_score = $2 WHERE username = $3 RETURNING *';
+                const updateValues = [points, points, username];
+                const result = await client.query(updateMaxScoreQuery, updateValues);
+                client.release();
+                res.status(200).json({ success: true, data: result.rows[0] });
+            } else {
+                // Just update points
+                const updateQuery = 'UPDATE users SET points = $1 WHERE username = $2 RETURNING *';
+                const updateValues = [points, username];
+                const result = await client.query(updateQuery, updateValues);
+                client.release();
+                res.status(200).json({ success: true, data: result.rows[0] });
+            }
         } else {
             // User does not exist, insert new user
-            const insertQuery = 'INSERT INTO users (username, points) VALUES ($1, $2) RETURNING *';
-            const insertValues = [username, points];
+            const insertQuery = 'INSERT INTO users (username, points, max_score) VALUES ($1, $2, $3) RETURNING *';
+            const insertValues = [username, points, points];
             const result = await client.query(insertQuery, insertValues);
             client.release();
             res.status(200).json({ success: true, data: result.rows[0] });
@@ -102,6 +116,7 @@ app.post('/saveUser', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
 
 // Endpoint to update tickets
 app.post('/updateTickets', async (req, res) => {
