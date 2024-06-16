@@ -317,26 +317,24 @@ async function gameOver() {
     window.location.replace(redirectURL);
 }
 
+async function saveUser(username, scoreToAdd) {
+    try {
+        const response = await fetch('/saveUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, points: scoreToAdd }),
+        });
 
-    async function saveUser(username, scoreToAdd) {
-        try {
-            const response = await fetch('/saveUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, points: scoreToAdd }),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                points = result.data.points; // Update points with the latest value from the server
-                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
-            } else {
-                console.error('Error saving user:', result.error);
-            }
-        } catch (error) {
-            console.error('Error saving user:', error);
+        const result = await response.json();
+        if (result.success) {
+            points = result.data.points; // Update points with the latest value from the server
+            userPoints.textContent = `Points: ${points}`; // Update the points in the UI
+        } else {
+            console.error('Error saving user:', result.error);
         }
+    } catch (error) {
+        console.error('Error saving user:', error);
     }
-});
+}
