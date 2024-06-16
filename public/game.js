@@ -1,353 +1,168 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const preloadImages = () => {
-        const images = ['home.png', 'tasks.png', 'airdrop.png'];
-        images.forEach((src) => {
-            const img = new Image();
-            img.src = src;
-        });
-    };
-    preloadImages();
-   
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const backgroundMusic = new Audio('background-music.mp3');
-    backgroundMusic.loop = true;
-    backgroundMusic.volume = 0.5;
-
-  
-    const startScreen = document.getElementById('startScreen');
-    const playButton = document.getElementById('playButton');
-    const tasksButton = document.getElementById('tasksButton');
-    const upgradeButton = document.getElementById('upgradeButton');
-    const userInfo = document.getElementById('userInfo');
-    const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points');
-    const userTickets = document.getElementById('ticketsInfo');
-
-    // Initialize Telegram Web Apps API
-    const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe?.user;
-
-    // Set username or fallback to "Username"
-    if (user) {
-        userInfo.textContent = user.username || `${user.first_name} ${user.last_name}`;
-    } else {
-        userInfo.textContent = 'Username';
-    }
-
-    let points = 0;
-    let tickets = 0; 
-
-    // Fetch initial user data (points and tickets)
-    const fetchUserData = async () => {
-        try {
-            const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
-            const data = await response.json();
-            if (data.success) {
-                points = data.points;
-                tickets = data.tickets;
-                userPoints.textContent = `Points: ${points}`;
-                userTickets.textContent = `Tickets: ${tickets}`;
-            } else {
-                console.error('Failed to fetch user data:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-        }
-    };
-
-    fetchUserData();
-
- playButton.addEventListener('click', async () => {
-        // Deduct one ticket when starting the game
-        if (tickets > 0) {
-            tickets--;
-            userTickets.textContent = `Tickets: ${tickets}`;
-
-            // Update tickets on the server
-            try {
-                const response = await fetch('/updateTickets', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username: userInfo.textContent, tickets }),
-                });
-
-                const result = await response.json();
-                if (!result.success) {
-                    console.error('Error updating tickets:', result.error);
-                }
-            } catch (error) {
-                console.error('Error updating tickets:', error);
-            }
-        } else {
-            alert('No more tickets available!');
-            return;
-        }
-
-        startScreen.style.display = 'none';
-        footer.style.display = 'none';  // Hide footer when game starts
-        startMusic();
-        initGame();
-        gameLoop();
-    });
-
-    tasksButton.addEventListener('click', () => {
-        alert('Tasks: Coming Soon!');
-    });
-
-    upgradeButton.addEventListener('click', () => {
-        alert('Upgrade: Coming Soon!');
-    });
-
-    const WIDTH = canvas.width;
-    const HEIGHT = canvas.height;
-
-    const TILE_COLOR = '#000000';
-    const BORDER_COLOR = '#0000FF';
-    const SKY_BLUE = '#87CEEB';
-    const SHADOW_COLOR = '#000080';
-
-    const COLUMNS = 4;
-    const SEPARATOR = 0; // Eliminating white space between tiles
-    const VERTICAL_GAP = 5;
-    const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
-    const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
-
-    let TILE_SPEED;
-    const SPEED_INCREMENT = isMobileDevice() ? 0.005 : 0.002;
-
-    let tiles = [];
-    let score = 0;
-    let gameRunning = true;
-
-    class Tile {
-        constructor(x, y) {
-            this.x = x;
-            this.y = y;
-            this.width = TILE_WIDTH;
-            this.height = TILE_HEIGHT;
-            this.clicked = false;
-            this.opacity = 1;
-        }
-
-        move(speed) {
-            this.y += speed;
-        }
-
-        draw() {
-            ctx.fillStyle = TILE_COLOR;
-            ctx.globalAlpha = this.opacity;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.globalAlpha = 1;
-            ctx.strokeStyle = BORDER_COLOR;
-            ctx.lineWidth = 2;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
-        }
-
-        isClicked(mouseX, mouseY) {
-            return this.x <= mouseX && this.x + this.width >= mouseX &&
-                   this.y <= mouseY && this.y + this.height >= mouseY;
-        }
-
-        isOutOfBounds() {
-            return this.y + this.height >= HEIGHT && !this.clicked;
-        }
-
-        startDisappearing() {
-            this.clicked = true;
-            this.opacity -= 0.05;
-        }
-
-        updateOpacity() {
-            if (this.clicked && this.opacity > 0) {
-                this.opacity -= 0.05;
-            }
-        }
-    }
-
-    function initGame() {
-        tiles = [];
-        for (let i = 0; i < 4; i++) {
-            const x = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
-            const y = -(i * (TILE_HEIGHT + VERTICAL_GAP)) - TILE_HEIGHT;
-            tiles.push(new Tile(x, y));
-        }
-        score = 0;
-        TILE_SPEED = isMobileDevice() ? 6 : 2;
-        gameRunning = true;
-
-        backgroundMusic.play().catch(function(error) {
-            console.error('Error playing audio:', error);
-        });
-    }
-
-    function isMobileDevice() {
-        return /Mobi|Android/i.test(navigator.userAgent);
-    }
-
-    function addNewTile() {
-        const attempts = 100;
-        for (let i = 0; i < attempts; i++) {
-            const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
-            const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
-            if (!tiles.some(tile => {
-                const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
-                return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
-                    tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
-            })) {
-                tiles.push(new Tile(newTileX, newTileY));
-                break;
-            }
-        }
-    }
-
-    function handleClick(event) {
-        if (!gameRunning) return;
-
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mouseX = (event.clientX - rect.left) * scaleX;
-        const mouseY = (event.clientY - rect.top) * scaleY;
-
-        let clickedOnTile = false;
-        tiles.forEach(tile => {
-            if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
-                tile.startDisappearing();
-                clickedOnTile = true;
-                score++;
-                addNewTile();
-            }
-        });
-
-        if (!clickedOnTile) {
-            gameRunning = false;
-            gameOver();
-        }
-    }
-
-    canvas.addEventListener('click', handleClick);
-    canvas.addEventListener('touchstart', (event) => {
-        event.preventDefault();
-        const touch = event.touches[0];
-        handleClick({
-            clientX: touch.clientX,
-            clientY: touch.clientY,
-        });
-    });
-
-    function gameLoop() {
-        if (!gameRunning) return;
-
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-        let outOfBounds = false;
-        tiles.forEach(tile => {
-            tile.move(TILE_SPEED);
-            tile.updateOpacity();
-            if (tile.isOutOfBounds()) {
-                outOfBounds = true;
-            }
-            tile.draw();
-        });
-
-        if (outOfBounds) {
-            gameRunning = false;
-            gameOver();
-            return;
-        }
-
-        tiles = tiles.filter(tile => tile.y < HEIGHT && tile.opacity > 0);
-
-        while (tiles.length < 4) {
-            addNewTile();
-        }
-
-        // Draw vertical lines
-        ctx.strokeStyle = BORDER_COLOR;
-        ctx.lineWidth = 2;
-        for (let i = 1; i < COLUMNS; i++) {
-            const x = i * TILE_WIDTH;
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, HEIGHT);
-            ctx.stroke();
-        }
-
-        ctx.fillStyle = SHADOW_COLOR;
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`SCORE: ${score}`, WIDTH / 2 + 2, 32);
-
-        ctx.fillStyle = SKY_BLUE;
-        ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
-
-        TILE_SPEED += SPEED_INCREMENT;
-
-        requestAnimationFrame(gameLoop);
-    }
-
-    function startMusic() {
-        backgroundMusic.play().catch(function(error) {
-            console.error('Error playing audio:', error);
-        });
-    }
-
-    tg.onEvent('themeChanged', function() {
-        const themeParams = tg.themeParams;
-        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-            document.body.style.backgroundColor = themeParams.bg_color;
-        }
-    });
-
-    tg.ready().then(function() {
-        if (tg.themeParams) {
-            const themeParams = tg.themeParams;
-            if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-                document.body.style.backgroundColor = themeParams.bg_color;
-            }
-        }
-        if (tg.initDataUnsafe?.user) {
-            userInfo.textContent = tg.initDataUnsafe.user.username || `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
-        } else {
-            userInfo.textContent = 'Username';
-        }
-        if (tg.initDataUnsafe?.is_explicitly_enabled) {
-            startMusic();
-        }
-    });
-
-async function gameOver() {
-    // Save points to the server (if needed)
-    await saveUser(userInfo.textContent, score);
-
-    // Redirect to transition.html with score
-    const redirectURL = `transition.html?score=${score}`;
-    window.location.replace(redirectURL);
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-image: url('background.jpg'); /* Replace 'background.jpg' with your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 }
 
+#newLayout {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 400px;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9); /* Different background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
 
-    async function saveUser(username, scoreToAdd) {
-        try {
-            const response = await fetch('/saveUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, points: scoreToAdd }),
-            });
+#playButton {
+    font-family: 'YourFont', sans-serif;
+    padding: 15px 30px;
+    margin: 10px 0;
+    background-color: #007bff;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
 
-            const result = await response.json();
-            if (result.success) {
-                points = result.data.points; // Update points with the latest value from the server
-                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
-            } else {
-                console.error('Error saving user:', result.error);
-            }
-        } catch (error) {
-            console.error('Error saving user:', error);
-        }
-    }
-});
+#ticketsInfo {
+    font-size: 18px;
+    margin: 10px 0;
+    color: #000;
+}
+
+.comingSoon {
+    font-family: 'YourFont', sans-serif;
+    padding: 10px 20px;
+    margin: 10px;
+    background-color: #ffc107;
+    color: #000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+}
+
+#gameContainer {
+    flex-grow: 1;
+    width: 100vw;
+    margin: 0;
+    border: none;
+    background-color: transparent; /* Ensure it is transparent to show the body's background image */
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-color: transparent; /* Make canvas background transparent */
+}
+
+#startScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#buttonContainer {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#centerButton, #textButton {
+    font-family: 'YourFont', sans-serif;
+    padding: 15px 30px;
+    margin: 10px 0;
+    background-color: #007bff;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+#userInfo {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    color: #000;
+    font-size: 18px;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#points {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    color: #000;
+    font-size: 18px;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.hidden {
+    display: none;
+}
+
+#footer {
+    display: flex;
+    justify-content: space-around;
+    background-color: #f0f0f0;
+    padding: 10px 0;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-button {
+    flex-grow: 1;
+    text-align: center;
+    padding: 5px 0;
+    margin: 0 5px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.footer-button img {
+    max-width: 30px;
+    height: auto;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
