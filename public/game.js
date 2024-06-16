@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let tickets = 0; 
 
     // Fetch initial user data (points and tickets)
-    const fetchUserData = async () => {
+const fetchUserData = async () => {
         try {
             const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
             const data = await response.json();
@@ -55,40 +55,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchUserData();
 
-    centerButton.addEventListener('click', async () => {
-        // Deduct one ticket when starting the game
-        if (tickets > 0) {
-            tickets--;
-            userTickets.textContent = `Tickets: ${tickets}`;
+    
 
-            // Update tickets on the server
-            try {
-                const response = await fetch('/updateTickets', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ username: userInfo.textContent, tickets }),
-                });
+centerButton.addEventListener('click', async () => {
+    // Deduct one ticket when starting the game
+    if (tickets > 0) {
+        tickets--;
+        userTickets.textContent = `Tickets: ${tickets}`;
 
-                const result = await response.json();
-                if (!result.success) {
-                    console.error('Error updating tickets:', result.error);
-                }
-            } catch (error) {
-                console.error('Error updating tickets:', error);
+        // Update tickets on the server
+        try {
+            const response = await fetch('/updateTickets', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: userInfo.textContent, tickets }),
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                console.error('Error updating tickets:', result.error);
             }
-        } else {
-            alert('No more tickets available!');
-            return;
+        } catch (error) {
+            console.error('Error updating tickets:', error);
         }
+    } else {
+        alert('No more tickets available!');
+        return;
+    }
 
-        startScreen.style.display = 'none';
-        footer.style.display = 'none';  // Hide footer when game starts
-        startMusic();
-        initGame();
-        gameLoop();
-    });
+    // Ensure these functions are properly defined and invoked
+    startScreen.style.display = 'none';
+    footer.style.display = 'none';  // Hide footer when game starts
+    startMusic();
+    initGame(); // Ensure initGame is correctly defined and executed
+    gameLoop(); // Ensure gameLoop is correctly defined and executed
+});
+
 
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
