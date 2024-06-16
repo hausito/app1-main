@@ -254,6 +254,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             addNewTile();
         }
 
+        // Draw vertical lines
+        ctx.strokeStyle = BORDER_COLOR;
+        ctx.lineWidth = 2;
+        for (let i = 1; i < COLUMNS; i++) {
+            const x = i * TILE_WIDTH;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, HEIGHT);
+            ctx.stroke();
+        }
+
         ctx.fillStyle = SHADOW_COLOR;
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
