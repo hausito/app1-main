@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         isClicked(mouseX, mouseY) {
             return this.x <= mouseX && this.x + this.width >= mouseX &&
-                   this.y <= mouseY && this.y + this.height >= mouseY;
+                    this.y <= mouseY && this.y + this.height >= mouseY;
         }
 
         isOutOfBounds() {
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!tiles.some(tile => {
                 const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
                 return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
-                    tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
+                        tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
             })) {
                 tiles.push(new Tile(newTileX, newTileY));
                 break;
@@ -217,106 +217,78 @@ document.addEventListener('DOMContentLoaded', async () => {
         handleClick({
             clientX: touch.clientX,
             clientY: touch.clientY,
+            preventDefault: () => {},
         });
     });
 
-    function gameLoop() {
-        if (!gameRunning) return;
-
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-        let outOfBounds = false;
-        tiles.forEach(tile => {
-            tile.move(TILE_SPEED);
-            tile.updateOpacity();
-            if (tile.isOutOfBounds()) {
-                outOfBounds = true;
-            }
-            tile.draw();
-        });
-
-        if (outOfBounds) {
-            gameRunning = false;
-            gameOver();
-            return;
-        }
-
-        tiles = tiles.filter(tile => tile.y < HEIGHT && tile.opacity > 0);
-
-        while (tiles.length < 4) {
-            addNewTile();
-        }
-
-        ctx.fillStyle = SHADOW_COLOR;
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`SCORE: ${score}`, WIDTH / 2 + 2, 32);
-
+    function drawBackground() {
         ctx.fillStyle = SKY_BLUE;
-        ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
-
-        TILE_SPEED += SPEED_INCREMENT;
-
-        requestAnimationFrame(gameLoop);
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
     }
 
-    function startMusic() {
-        backgroundMusic.play().catch(function(error) {
-            console.error('Error playing audio:', error);
-        });
+    function drawShadowText(text, x, y) {
+        ctx.fillStyle = SHADOW_COLOR;
+        ctx.fillText(text, x + 2, y + 2);
+        ctx.fillStyle = WHITE;
+        ctx.fillText(text, x, y);
     }
 
-    tg.onEvent('themeChanged', function() {
-        const themeParams = tg.themeParams;
-        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-            document.body.style.backgroundColor = themeParams.bg_color;
-        }
-    });
-
-    tg.ready().then(function() {
-        if (tg.themeParams) {
-            const themeParams = tg.themeParams;
-            if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-                document.body.style.backgroundColor = themeParams.bg_color;
-            }
-        }
-        if (tg.initDataUnsafe?.user) {
-            userInfo.textContent = tg.initDataUnsafe.user.username || `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
-        } else {
-            userInfo.textContent = 'Username';
-        }
-        if (tg.initDataUnsafe?.is_explicitly_enabled) {
-            startMusic();
-        }
-    });
+    function drawScore() {
+        ctx.font = '30px Arial';
+        drawShadowText(`Score: ${score}`, 20, 40);
+    }
 
     async function gameOver() {
-        // Save points to the server
-        await saveUser(userInfo.textContent, score);
+        ctx.font = '50px Arial';
+        drawShadowText('Game Over', WIDTH / 2 - 120, HEIGHT / 2);
 
-        // Immediately redirect to transition.html
-        window.location.replace(`transition.html?score=${score}`);
-    }
+        setTimeout(() => {
+            startScreen.style.display = 'flex';
+            footer.style.display = 'flex';
+        }, 2000);
 
-    async function saveUser(username, scoreToAdd) {
+        backgroundMusic.pause();
+        backgroundMusic.currentTime = 0;
+
+        // Update points on the server
         try {
-            const response = await fetch('/saveUser', {
+            const response = await fetch('/updatePoints', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, points: scoreToAdd }),
+                body: JSON.stringify({ username: userInfo.textContent, points: score }),
             });
 
             const result = await response.json();
-            if (result.success) {
-                points = result.data.points; // Update points with the latest value from the server
-                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
-            } else {
-                console.error('Error saving user:', result.error);
+            if (!result.success) {
+                console.error('Error updating points:', result.error);
             }
         } catch (error) {
-            console.error('Error saving user:', error);
+            console.error('Error updating points:', error);
+        }
+    }
+
+    function gameLoop() {
+        ctx.clearRect(0, 0, WIDTH, HEIGHT);
+        drawBackground();
+        drawScore();
+
+        tiles.forEach(tile => {
+            tile.move(TILE_SPEED);
+            tile.draw();
+            if (tile.isOutOfBounds()) {
+                gameRunning = false;
+                gameOver();
+            }
+        });
+
+        tiles = tiles.filter(tile => !tile.clicked || tile.opacity > 0);
+        tiles.forEach(tile => tile.updateOpacity());
+
+        if (gameRunning) {
+            TILE_SPEED += SPEED_INCREMENT;
+            requestAnimationFrame(gameLoop);
         }
     }
 });
