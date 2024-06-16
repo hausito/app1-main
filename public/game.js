@@ -1,4 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    const preloadImages = () => {
+        const images = ['home.png', 'tasks.png', 'airdrop.png'];
+        images.forEach((src) => {
+            const img = new Image();
+            img.src = src;
+        });
+    };
+    preloadImages();
+   
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const backgroundMusic = new Audio('background-music.mp3');
