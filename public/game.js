@@ -14,12 +14,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
 
+  
     const startScreen = document.getElementById('startScreen');
-    const centerButton = document.getElementById('centerButton');
+    const playButton = document.getElementById('playButton');
+    const tasksButton = document.getElementById('tasksButton');
+    const upgradeButton = document.getElementById('upgradeButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points'); 
-    const userTickets = document.getElementById('tickets'); 
+    const userPoints = document.getElementById('points');
+    const userTickets = document.getElementById('ticketsInfo');
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -55,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchUserData();
 
-    centerButton.addEventListener('click', async () => {
+ playButton.addEventListener('click', async () => {
         // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
@@ -88,6 +91,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         startMusic();
         initGame();
         gameLoop();
+    });
+
+    tasksButton.addEventListener('click', () => {
+        alert('Tasks: Coming Soon!');
+    });
+
+    upgradeButton.addEventListener('click', () => {
+        alert('Upgrade: Coming Soon!');
     });
 
     const WIDTH = canvas.width;
