@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
     preloadImages();
-   
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const backgroundMusic = new Audio('background-music.mp3');
@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const centerButton = document.getElementById('centerButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points'); 
-    const userTickets = document.getElementById('tickets'); 
+    const userPoints = document.getElementById('points');
+    const userTickets = document.getElementById('tickets');
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let points = 0;
-    let tickets = 0; 
+    let tickets = 0;
 
     // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
@@ -126,13 +126,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         draw() {
-            ctx.fillStyle = TILE_COLOR;
             ctx.globalAlpha = this.opacity;
+            ctx.fillStyle = TILE_COLOR;
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.globalAlpha = 1;
+
             ctx.strokeStyle = BORDER_COLOR;
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x, this.y, this.width, this.height);
+            ctx.globalAlpha = 1;
         }
 
         isClicked(mouseX, mouseY) {
@@ -151,17 +152,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateOpacity() {
             if (this.clicked && this.opacity > 0) {
                 this.opacity -= 0.05;
-                if (this.opacity <= 0) {
-                    this.opacity = 0;
-                    this.remove();
-                }
-            }
-        }
-
-        remove() {
-            const index = tiles.indexOf(this);
-            if (index > -1) {
-                tiles.splice(index, 1);
             }
         }
     }
