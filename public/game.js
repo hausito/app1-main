@@ -5,9 +5,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const img = new Image();
             img.src = src;
         });
-    }; 
+    };
     preloadImages();
-
+   
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const backgroundMusic = new Audio('background-music.mp3');
@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const centerButton = document.getElementById('centerButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
-    const userPoints = document.getElementById('points');
-    const userTickets = document.getElementById('tickets');
+    const userPoints = document.getElementById('points'); 
+    const userTickets = document.getElementById('tickets'); 
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let points = 0;
-    let tickets = 0;
+    let tickets = 0; 
 
     // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
@@ -126,14 +126,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         draw() {
-            ctx.globalAlpha = this.opacity;
             ctx.fillStyle = TILE_COLOR;
+            ctx.globalAlpha = this.opacity;
             ctx.fillRect(this.x, this.y, this.width, this.height);
-
+            ctx.globalAlpha = 1;
             ctx.strokeStyle = BORDER_COLOR;
             ctx.lineWidth = 2;
             ctx.strokeRect(this.x, this.y, this.width, this.height);
-            ctx.globalAlpha = 1;
         }
 
         isClicked(mouseX, mouseY) {
@@ -147,6 +146,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startDisappearing() {
             this.clicked = true;
+            this.opacity -= 0.05;
         }
 
         updateOpacity() {
@@ -231,27 +231,47 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!gameRunning) return;
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        ctx.fillStyle = SKY_BLUE;
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
+        let outOfBounds = false;
+        tiles.forEach(tile => {
+            tile.move(TILE_SPEED);
+            tile.updateOpacity();
+            if (tile.isOutOfBounds()) {
+                outOfBounds = true;
+            }
+            tile.draw();
+        });
+
+        if (outOfBounds) {
+            gameRunning = false;
+            gameOver();
+            return;
+        }
+
+        tiles = tiles.filter(tile => tile.y < HEIGHT && tile.opacity > 0);
+
+        while (tiles.length < 4) {
+            addNewTile();
+        }
+
+        // Draw vertical lines
+        ctx.strokeStyle = BORDER_COLOR;
+        ctx.lineWidth = 2;
         for (let i = 1; i < COLUMNS; i++) {
+            const x = i * TILE_WIDTH;
             ctx.beginPath();
-            ctx.moveTo(i * (TILE_WIDTH + SEPARATOR), 0);
-            ctx.lineTo(i * (TILE_WIDTH + SEPARATOR), HEIGHT);
-            ctx.strokeStyle = BORDER_COLOR;
-            ctx.lineWidth = 2;
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, HEIGHT);
             ctx.stroke();
         }
 
-        tiles.forEach(tile => {
-            tile.move(TILE_SPEED);
-            tile.draw();
-            tile.updateOpacity();
-            if (tile.isOutOfBounds()) {
-                gameRunning = false;
-                gameOver();
-            }
-        });
+        ctx.fillStyle = SHADOW_COLOR;
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`SCORE: ${score}`, WIDTH / 2 + 2, 32);
+
+        ctx.fillStyle = SKY_BLUE;
+        ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
 
         TILE_SPEED += SPEED_INCREMENT;
 
@@ -286,9 +306,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (tg.initDataUnsafe?.is_explicitly_enabled) {
             startMusic();
         }
-
-        // Expand the WebApp to full screen
-        tg.expand();
     });
 
     async function gameOver() {
