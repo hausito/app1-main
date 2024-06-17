@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
 
     let TILE_SPEED;
-    const SPEED_INCREMENT = isMobileDevice() ? 0.05 : 0.02;
+    const SPEED_INCREMENT = isMobileDevice() ? 5 : 0.5;
 
     let tiles = [];
     let score = 0;
