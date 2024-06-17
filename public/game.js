@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
 
-  
     const startScreen = document.getElementById('startScreen');
     const playButton = document.getElementById('playButton');
     const tasksButton = document.getElementById('tasksButton');
@@ -59,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     fetchUserData();
 
- playButton.addEventListener('click', async () => {
+    playButton.addEventListener('click', async () => {
         // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
@@ -92,7 +91,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         header.style.display = 'none'; // Hide footer when game starts
         startMusic();
         initGame();
-        gameLoop();
+        lastTimestamp = performance.now();
+        requestAnimationFrame(gameLoop);
     });
 
     tasksButton.addEventListener('click', () => {
@@ -240,14 +240,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    function gameLoop() {
+    let lastTimestamp = 0;
+
+    function gameLoop(timestamp) {
         if (!gameRunning) return;
+
+        const deltaTime = (timestamp - lastTimestamp) / 1000; // Calculate delta time in seconds
+        lastTimestamp = timestamp;
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
         let outOfBounds = false;
         tiles.forEach(tile => {
-            tile.move(TILE_SPEED);
+            tile.move(TILE_SPEED * deltaTime); // Scale speed by delta time
             tile.updateOpacity();
             if (tile.isOutOfBounds()) {
                 outOfBounds = true;
@@ -286,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fillStyle = SKY_BLUE;
         ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
 
-        TILE_SPEED += SPEED_INCREMENT;
+        TILE_SPEED += SPEED_INCREMENT * deltaTime; // Scale speed increment by delta time
 
         requestAnimationFrame(gameLoop);
     }
@@ -321,15 +326,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-async function gameOver() {
-    // Save points to the server (if needed)
-    await saveUser(userInfo.textContent, score);
+    async function gameOver() {
+        // Save points to the server (if needed)
+        await saveUser(userInfo.textContent, score);
 
-    // Redirect to transition.html with score
-    const redirectURL = `transition.html?score=${score}`;
-    window.location.replace(redirectURL);
-}
-
+        // Redirect to transition.html with score
+        const redirectURL = `transition.html?score=${score}`;
+        window.location.replace(redirectURL);
+    }
 
     async function saveUser(username, scoreToAdd) {
         try {
