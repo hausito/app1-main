@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
     preloadImages();
-   
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const backgroundMusic = new Audio('background-music.mp3');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let points = 0;
-    let tickets = 0; 
+    let tickets = 0;
 
     // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         startScreen.style.display = 'none';
-        footer.style.display = 'none'; 
+        footer.style.display = 'none';
         header.style.display = 'none'; // Hide footer when game starts
         startMusic();
         initGame();
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
 
     let TILE_SPEED;
-    const SPEED_INCREMENT = isMobileDevice() ? 5 : 0.5;
+    const SPEED_INCREMENT = isMobileDevice() ? 0.05 : 0.02;
 
     let tiles = [];
     let score = 0;
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let outOfBounds = false;
         tiles.forEach(tile => {
-            tile.move(TILE_SPEED * deltaTime); // Scale speed by delta time
+            tile.move(TILE_SPEED * deltaTime * 60); // Scale speed by delta time and adjust for 60 FPS
             tile.updateOpacity();
             if (tile.isOutOfBounds()) {
                 outOfBounds = true;
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fillStyle = SKY_BLUE;
         ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
 
-        TILE_SPEED += SPEED_INCREMENT * deltaTime; // Scale speed increment by delta time
+        TILE_SPEED += SPEED_INCREMENT * deltaTime * 60; // Scale speed increment by delta time and adjust for 60 FPS
 
         requestAnimationFrame(gameLoop);
     }
