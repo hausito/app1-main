@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
 
     let TILE_SPEED;
-    const SPEED_INCREMENT = isMobileDevice() ? 0.05 : 0.02;
+    const SPEED_INCREMENT = isMobileDevice() ? 0.02 : 0.01;
 
     let tiles = [];
     let score = 0;
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tiles.push(new Tile(x, y));
         }
         score = 0;
-        TILE_SPEED = isMobileDevice() ? 6 : 2;
+        TILE_SPEED = isMobileDevice() ? 3 : 1.5;
         gameRunning = true;
 
         backgroundMusic.play().catch(function(error) {
