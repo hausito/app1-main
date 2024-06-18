@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
 
     let TILE_SPEED;
-    const SPEED_INCREMENT = 0.001;
+    const SPEED_INCREMENT = 0.0018;
 
     let tiles = [];
     let score = 0;
