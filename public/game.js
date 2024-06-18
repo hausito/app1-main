@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const HEIGHT = canvas.height;
 
     const TILE_COLOR = '#000000';
-    const BORDER_COLOR = '#0000FF';
+    const BORDER_COLOR = '#ffffff';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
 
