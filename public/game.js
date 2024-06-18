@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
 
-    const TILE_COLOR = '#000000';
-    const BORDER_COLOR = '#ffffff';
+    const TILE_COLOR = '##2F3C7E';
+    const BORDER_COLOR = '#FBEAEB';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
 
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.globalAlpha = 1;
             ctx.strokeStyle = BORDER_COLOR;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.strokeRect(this.x, this.y, this.width, this.height);
         }
 
