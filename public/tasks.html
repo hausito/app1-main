@@ -6,74 +6,61 @@
   <title>Tasks - Melody Mint</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Additional styles specific to tasks.html */
+    /* General body styles */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      overflow-x: hidden; /* Prevent horizontal overflow */
-      background-color: #f9f9f9; /* Set a light background color */
+      overflow-x: hidden; /* Prevent horizontal scrolling */
+      background-color: #f9f9f9; /* Light background */
     }
 
+    /* Container for leaderboard */
     #content {
-      width: 80%;
+      width: 90%; /* Adjust width for smaller screens */
       max-width: 600px;
       margin: 20px auto;
       padding: 20px;
       background-color: #fff;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow-y: auto; /* Enable vertical scrolling if needed */
+      max-height: 80vh; /* Limit height and enable scrolling if necessary */
     }
 
+    /* Heading styles */
     h2 {
       text-align: center;
       margin-bottom: 20px;
       color: #333;
     }
 
+    /* List styles for leaderboard */
     #topUsersList {
       list-style-type: none;
       padding: 0;
       margin: 0;
     }
 
+    /* Individual leaderboard item styles */
     #topUsersList li {
       background-color: #ffffff;
-      padding: 15px;
-      margin-bottom: 10px;
+      padding: 10px;
+      margin-bottom: 8px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      font-size: 18px;
+      font-size: 16px; /* Decrease font size for smaller screens */
       color: #555;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    #topUsersList li span {
-      font-weight: bold;
-    }
-
-    .leaderboard-heading {
-      background-color: #007bff;
-      color: #fff;
-      padding: 10px;
-      border-radius: 8px 8px 0 0;
-      text-align: center;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     /* Responsive adjustments */
     @media (max-width: 480px) {
       #content {
-        width: 90%; /* Adjust width for smaller screens */
-        padding: 10px; /* Reduce padding */
+        padding: 15px; /* Adjust padding */
       }
 
       #topUsersList li {
-        font-size: 16px; /* Decrease font size for smaller screens */
-        padding: 12px; /* Adjust padding */
+        font-size: 14px; /* Further decrease font size */
       }
     }
   </style>
@@ -82,7 +69,6 @@
 
   <div id="content">
     <h2>Top 10 Users</h2>
-    <div class="leaderboard-heading">Leaderboard</div>
     <ul id="topUsersList"></ul>
   </div>
 
@@ -109,7 +95,7 @@
 
         topUsers.slice(0, 10).forEach((user, index) => {
           const listItem = document.createElement('li');
-          listItem.innerHTML = `<span>${index + 1}. ${user.username}</span> - ${user.points} points`;
+          listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
           topUsersList.appendChild(listItem);
         });
       } catch (error) {
@@ -124,4 +110,3 @@
 
 </body>
 </html>
- 
