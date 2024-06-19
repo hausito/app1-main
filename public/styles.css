@@ -1,124 +1,74 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-image: url('background.jpg'); /* Replace 'background.jpg' with your image path */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over - Transition</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-image: url('background.jpg');
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
 
-#newLayout {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    max-width: 400px;
-    padding: 20px;
-    background-color: rgba(255, 255, 255, 0.9); /* Different background */
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
+        .score {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 80%;
+            text-align: center;
+        }
 
-button {
-    font-family: 'YourFont', sans-serif;
-    padding: 15px 30px;
-    margin: 10px 0;
-    background: linear-gradient(45deg, #ff7e5f, #feb47b); /* Gradient color */
-    color: #fff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    width: calc(100% - 40px); /* Ensure buttons are the same width */
-    max-width: 300px; /* Optional: control max width for larger screens */
-}
+        .score h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
 
-button:hover {
-    background: linear-gradient(45deg, #feb47b, #ff7e5f); /* Hover effect */
-}
+        .score p {
+            font-size: 18px;
+            margin: 20px 0;
+            color: #007bff; /* Score color */
+            font-weight: bold;
+        }
 
-#ticketsInfo {
-    font-size: 18px;
-    margin: 10px 0;
-    color: #000;
-}
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #ff7e5f, #feb47b); /* Gradient button */
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
 
-#gameContainer {
-    flex-grow: 1;
-    width: 100vw;
-    margin: 0;
-    border: none;
-    background-color: transparent; /* Ensure it is transparent to show the body's background image */
-}
+        .button:hover {
+            background: linear-gradient(45deg, #feb47b, #ff7e5f); /* Hover effect */
+        }
+    </style>
+</head>
+<body>
+    <div class="score">
+        <h2>Your Score:</h2>
+        <p id="scoreValue"></p>
+        <a href="index.html" class="button">Main Menu</a>
+    </div>
 
-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background-color: transparent; /* Make canvas background transparent */
-}
-
-#startScreen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-#userInfo {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    color: #000;
-    font-size: 18px;
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-#points {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    color: #000;
-    font-size: 18px;
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-#footer {
-    display: flex;
-    justify-content: space-around;
-    background-color: #f0f0f0;
-    padding: 10px 0;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
-.footer-button {
-    flex-grow: 1;
-    text-align: center;
-    padding: 5px 0;
-    margin: 0 5px;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.footer-button img {
-    max-width: 30px;
-    height: auto;
-}
+    <script>
+        // Retrieve score from query parameters and display
+        const urlParams = new URLSearchParams(window.location.search);
+        const score = urlParams.get('score');
+        document.getElementById('scoreValue').textContent = score;
+    </script>
+</body>
+</html>
