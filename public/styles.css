@@ -20,17 +20,14 @@ body {
     width: 80%;
     max-width: 400px;
     padding: 20px;
-    background-color: rgba(255, 255, 255, 0.9); /* Different background */
+    background-color: rgba(255, 255, 255, 0.9);
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
-.button-common {
-    font-family: 'YourFont', sans-serif;
-    width: 100%; /* Set to full width of the container */
-    max-width: 250px; /* Optional: set a maximum width */
-    padding: 15px;
+button {
+    padding: 15px 30px;
     margin: 10px 0;
     background-color: #007bff;
     color: #fff;
@@ -38,18 +35,17 @@ body {
     border-radius: 10px;
     border: none;
     cursor: pointer;
-    text-align: center;
     transition: background-color 0.3s ease;
+    font-family: 'YourFont', sans-serif;
 }
 
-.button-common:hover {
+button:hover {
     background-color: #0056b3;
 }
 
-#ticketsInfo {
-    font-size: 18px;
-    margin: 10px 0;
-    color: #000;
+#playButton, .comingSoon {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #gameContainer {
@@ -57,14 +53,14 @@ body {
     width: 100vw;
     margin: 0;
     border: none;
-    background-color: transparent; /* Ensure it is transparent to show the body's background image */
+    background-color: transparent;
 }
 
 canvas {
     display: block;
     width: 100%;
     height: 100%;
-    background-color: transparent; /* Make canvas background transparent */
+    background-color: transparent;
 }
 
 #startScreen {
@@ -75,37 +71,22 @@ canvas {
     height: 100%;
 }
 
-#buttonContainer {
-    width: 80%;
-    margin: 0 auto;
+#header {
+    position: absolute;
+    width: 100%;
     display: flex;
-    height: 100%;
-    justify-content: center;
-    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px;
+    box-sizing: border-box;
 }
 
-#userInfo {
-    position: absolute;
-    top: 5px;
-    left: 5px;
-    color: #000;
-    font-size: 18px;
+#userInfo, #points {
     background-color: #fff;
     padding: 10px;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-#points {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    color: #000;
     font-size: 18px;
-    background-color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    color: #000;
 }
 
 #footer {
@@ -131,20 +112,4 @@ canvas {
 .footer-button img {
     max-width: 30px;
     height: auto;
-}
-
-button {
-    padding: 10px 20px;
-    margin: 10px;
-    font-size: 16px;
-    background-color: #007bff;
-    color: #ffffff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #0056b3;
 }
