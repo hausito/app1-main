@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startScreen.style.display = 'none';
         footer.style.display = 'none';
-        header.style.display = 'none'; 
+        header.style.display = 'none';
         startMusic();
         initGame();
         lastTimestamp = performance.now();
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const SHADOW_COLOR = '#000080';
 
     const COLUMNS = 4;
-    const SEPARATOR = 0; // No space between tiles
+    const SEPARATOR = 2; // Small space between tiles
     const VERTICAL_GAP = 5;
     const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
@@ -244,14 +244,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function gameLoop(timestamp) {
         if (!gameRunning) return;
 
-        const deltaTime = (timestamp - lastTimestamp) / 1000; 
+        const deltaTime = (timestamp - lastTimestamp) / 1000;
         lastTimestamp = timestamp;
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
         let outOfBounds = false;
         tiles.forEach(tile => {
-            tile.move(TILE_SPEED * deltaTime * 60); 
+            tile.move(TILE_SPEED * deltaTime * 60);
             tile.updateOpacity();
             if (tile.isOutOfBounds()) {
                 outOfBounds = true;
@@ -273,9 +273,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Draw vertical lines
         ctx.strokeStyle = BORDER_COLOR;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 4; // Increase the width to accentuate the separator lines
         for (let i = 1; i < COLUMNS; i++) {
-            const x = i * TILE_WIDTH;
+            const x = i * (TILE_WIDTH + SEPARATOR); // Adjust the position of the separators
             ctx.beginPath();
             ctx.moveTo(x, 0);
             ctx.lineTo(x, HEIGHT);
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fillStyle = SKY_BLUE;
         ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
 
-        TILE_SPEED += SPEED_INCREMENT * deltaTime * 60; 
+        TILE_SPEED += SPEED_INCREMENT * deltaTime * 60;
 
         requestAnimationFrame(gameLoop);
     }
@@ -343,8 +343,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const result = await response.json();
             if (result.success) {
-                points = result.data.points; 
-                userPoints.textContent = `Points: ${points}`; 
+                points = result.data.points;
+                userPoints.textContent = `Points: ${points}`;
             } else {
                 console.error('Error saving user:', result.error);
             }
