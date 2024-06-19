@@ -3,23 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top Users - Melody Mint</title>
+  <title>Tasks - Melody Mint</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Additional styles specific to #topUsersList */
+    /* Additional styles specific to tasks.html */
+    body {
+      background-image: none; /* Remove background image for this page */
+      background-color: #f9f9f9; /* Set a light background color */
+    }
+
+    #content {
+      width: 80%;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
     #topUsersList {
       list-style-type: none;
       padding: 0;
+      margin: 0;
     }
 
     #topUsersList li {
-      background-color: #f5f5f5;
-      padding: 10px 20px;
-      margin-bottom: 8px;
-      border-radius: 4px;
+      background-color: #ffffff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      font-size: 16px;
+      font-size: 18px;
       color: #555;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #topUsersList li span {
+      font-weight: bold;
+    }
+
+    .leaderboard-heading {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px 8px 0 0;
+      text-align: center;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
@@ -27,6 +66,7 @@
 
   <div id="content">
     <h2>Top 10 Users</h2>
+    <div class="leaderboard-heading">Leaderboard</div>
     <ul id="topUsersList"></ul>
   </div>
 
@@ -45,15 +85,15 @@
   <script>
     async function fetchTopUsers() {
       try {
-        const response = await fetch('/topUsers');
+        const response = await fetch('/topUsers'); // Replace with actual endpoint
         const topUsers = await response.json();
         
         const topUsersList = document.getElementById('topUsersList');
         topUsersList.innerHTML = '';
 
-        topUsers.slice(0, 10).forEach((user, index) => { // Slice to show only top 10 users
+        topUsers.slice(0, 10).forEach((user, index) => {
           const listItem = document.createElement('li');
-          listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
+          listItem.innerHTML = `<span>${index + 1}. ${user.username}</span> - ${user.points} points`;
           topUsersList.appendChild(listItem);
         });
       } catch (error) {
