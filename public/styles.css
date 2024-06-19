@@ -12,6 +12,16 @@ body {
     background-repeat: no-repeat;
 }
 
+#tasksButton {
+    background-color: yellow;
+    color: #FEE715; /* Optional: To make the text color black for better contrast */
+}
+
+#upgradeButton {
+    background-color: yellow;
+    color: #FEE715; /* Optional: To make the text color black for better contrast */
+}
+
 #newLayout {
     position: absolute;
     top: 50%;
