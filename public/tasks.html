@@ -44,13 +44,35 @@
 
     /* Individual leaderboard item styles */
     #topUsersList li {
-      background-color: #ffffff;
-      padding: 10px;
-      margin-bottom: 8px;
+      background-color: #f5f5f5;
+      padding: 12px 20px;
+      margin-bottom: 10px;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      font-size: 16px; /* Decrease font size for smaller screens */
-      color: #555;
+      font-size: 16px; /* Font size */
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Leaderboard rank style */
+    .rank {
+      font-weight: bold;
+      margin-right: 10px;
+      min-width: 25px; /* Ensure space for double-digit ranks */
+    }
+
+    /* Leaderboard user info style */
+    .user-info {
+      flex-grow: 1;
+      margin-left: 10px;
+    }
+
+    /* Leaderboard points style */
+    .points {
+      font-weight: bold;
+      color: #007bff; /* Accent color */
     }
 
     /* Responsive adjustments */
@@ -95,7 +117,11 @@
 
         topUsers.slice(0, 10).forEach((user, index) => {
           const listItem = document.createElement('li');
-          listItem.textContent = `${index + 1}. ${user.username} - ${user.points} points`;
+          listItem.innerHTML = `
+            <span class="rank">${index + 1}.</span>
+            <div class="user-info">${user.username}</div>
+            <span class="points">${user.points} points</span>
+          `;
           topUsersList.appendChild(listItem);
         });
       } catch (error) {
