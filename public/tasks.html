@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     body {
-      font-family: 'Arial', sans-serif;
+      font-family: 'Roboto', sans-serif;
       margin: 0;
       padding: 0;
       overflow-x: hidden; 
@@ -30,6 +30,7 @@
       text-align: center;
       margin-bottom: 20px;
       color: #333;
+      font-weight: 500;
     }
 
     #topUsersList {
@@ -111,7 +112,7 @@
           listItem.innerHTML = `
             <span class="rank">${index + 1}.</span>
             <div class="user-info">${user.username}</div>
-            <span class="points">${user.points} points</span>
+            <span class="points">${user.points} pts</span>
           `;
           topUsersList.appendChild(listItem);
         });
@@ -124,6 +125,5 @@
       fetchTopUsers();
     });
   </script>
-
 </body>
 </html>
