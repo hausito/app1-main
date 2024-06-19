@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchUserData();
 
     playButton.addEventListener('click', async () => {
-        // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
@@ -88,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         startScreen.style.display = 'none';
         footer.style.display = 'none';
-        header.style.display = 'none'; // Hide footer when game starts
+        header.style.display = 'none'; 
         startMusic();
         initGame();
         lastTimestamp = performance.now();
@@ -106,13 +105,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
 
-    const TILE_COLOR = '##2F3C7E';
+    const TILE_COLOR = '#2F3C7E';
     const BORDER_COLOR = '#FBEAEB';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
 
     const COLUMNS = 4;
-    const SEPARATOR = 0; // Eliminating white space between tiles
+    const SEPARATOR = 0; // No space between tiles
     const VERTICAL_GAP = 5;
     const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
@@ -139,13 +138,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         draw() {
-            ctx.fillStyle = TILE_COLOR;
+            const gradient = ctx.createLinearGradient(this.x, this.y, this.x + this.width, this.y + this.height);
+            gradient.addColorStop(0, '#2F3C7E');
+            gradient.addColorStop(1, '#FF6F61');
+            ctx.fillStyle = gradient;
             ctx.globalAlpha = this.opacity;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.globalAlpha = 1;
-            ctx.strokeStyle = BORDER_COLOR;
-            ctx.lineWidth = 1;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
         }
 
         isClicked(mouseX, mouseY) {
@@ -245,14 +244,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function gameLoop(timestamp) {
         if (!gameRunning) return;
 
-        const deltaTime = (timestamp - lastTimestamp) / 1000; // Calculate delta time in seconds
+        const deltaTime = (timestamp - lastTimestamp) / 1000; 
         lastTimestamp = timestamp;
 
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
         let outOfBounds = false;
         tiles.forEach(tile => {
-            tile.move(TILE_SPEED * deltaTime * 60); // Scale speed by delta time and adjust for 60 FPS
+            tile.move(TILE_SPEED * deltaTime * 60); 
             tile.updateOpacity();
             if (tile.isOutOfBounds()) {
                 outOfBounds = true;
@@ -291,7 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ctx.fillStyle = SKY_BLUE;
         ctx.fillText(`SCORE: ${score}`, WIDTH / 2, 30);
 
-        TILE_SPEED += SPEED_INCREMENT * deltaTime * 60; // Scale speed increment by delta time and adjust for 60 FPS
+        TILE_SPEED += SPEED_INCREMENT * deltaTime * 60; 
 
         requestAnimationFrame(gameLoop);
     }
@@ -327,10 +326,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     async function gameOver() {
-        // Save points to the server (if needed)
         await saveUser(userInfo.textContent, score);
-
-        // Redirect to transition.html with score
         const redirectURL = `transition.html?score=${score}`;
         window.location.replace(redirectURL);
     }
@@ -347,8 +343,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const result = await response.json();
             if (result.success) {
-                points = result.data.points; // Update points with the latest value from the server
-                userPoints.textContent = `Points: ${points}`; // Update the points in the UI
+                points = result.data.points; 
+                userPoints.textContent = `Points: ${points}`; 
             } else {
                 console.error('Error saving user:', result.error);
             }
