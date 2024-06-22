@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const BORDER_COLOR = '#FBEAEB';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
+    const TOUCH_FEEDBACK_COLOR = 'rgba(255, 255, 0, 0.5)'; // Yellow with 50% opacity
 
     const COLUMNS = 4;
     const SEPARATOR = 0;
@@ -132,6 +133,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             this.height = height;
             this.clicked = false;
             this.opacity = 1;
+            this.touchFeedback = false; // To indicate touch feedback
         }
 
         move(speed) {
@@ -146,6 +148,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.globalAlpha = this.opacity;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.globalAlpha = 1;
+
+            if (this.touchFeedback) {
+                ctx.fillStyle = TOUCH_FEEDBACK_COLOR;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
         }
 
         isClicked(mouseX, mouseY) {
@@ -251,6 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         tiles.forEach(tile => {
             if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
+                tile.touchFeedback = true; // Show touch feedback
                 if (tile instanceof LongTile) {
                     tile.startHolding();
                 } else {
@@ -275,8 +283,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mouseY = (touch.clientY - rect.top) * scaleY;
 
         if (touchStartY !== null) {
-            const distanceMoved = mouseY - touchStartY;
-
             tiles.forEach(tile => {
                 if (tile instanceof LongTile && tile.isClicked(mouseX, mouseY) && tile.holding) {
                     tile.continueHolding();
@@ -297,6 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         touchStartY = null;
 
         tiles.forEach(tile => {
+            tile.touchFeedback = false; // Remove touch feedback
             if (tile instanceof LongTile && tile.holding) {
                 tile.stopHolding();
                 if (!tile.isFullyHeld()) {
