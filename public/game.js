@@ -38,9 +38,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let points = 0;
     let tickets = 0;
 
-    // Fetch initial user data (points and tickets)
-let isNewUser = false; // Flag to track if user is new
-
 const fetchUserData = async () => {
     try {
         const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
@@ -75,6 +72,7 @@ function showWelcomePopup(username) {
         popupContainer.classList.add('hidden');
     }, 5000); // 5 seconds
 }
+
 
 
     fetchUserData();
