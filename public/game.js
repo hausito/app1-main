@@ -15,25 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.volume = 0.5;
 
     const startScreen = document.getElementById('startScreen');
-    const centerButton = document.getElementById('centerButton');
+    const playButton = document.getElementById('playButton');
+    const tasksButton = document.getElementById('tasksButton');
+    const upgradeButton = document.getElementById('upgradeButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
     const userPoints = document.getElementById('points');
-    const userTickets = document.getElementById('tickets');
-
-    const welcomePopup = document.createElement('div');
-    welcomePopup.id = 'welcomePopup';
-    welcomePopup.style.position = 'fixed';
-    welcomePopup.style.top = '50%';
-    welcomePopup.style.left = '50%';
-    welcomePopup.style.transform = 'translate(-50%, -50%)';
-    welcomePopup.style.padding = '20px';
-    welcomePopup.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    welcomePopup.style.borderRadius = '10px';
-    welcomePopup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
-    welcomePopup.style.textAlign = 'center';
-    welcomePopup.style.display = 'none';
-    document.body.appendChild(welcomePopup);
+    const userTickets = document.getElementById('ticketsInfo');
+    const header = document.getElementById('header');
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -59,10 +48,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tickets = data.tickets;
                 userPoints.textContent = `Points: ${points}`;
                 userTickets.textContent = `Tickets: ${tickets}`;
-
-                if (data.isNewUser) {
-                    showWelcomePopup(userInfo.textContent, tickets);
-                }
             } else {
                 console.error('Failed to fetch user data:', data.error);
             }
@@ -71,19 +56,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    const showWelcomePopup = (username, tickets) => {
-        welcomePopup.innerHTML = `<h2>Welcome, ${username}!</h2><p>You have earned 100 tickets.</p><p>Current Tickets: ${tickets}</p><button onclick="closeWelcomePopup()">Close</button>`;
-        welcomePopup.style.display = 'block';
-    };
-
-    const closeWelcomePopup = () => {
-        welcomePopup.style.display = 'none';
-    };
-
     fetchUserData();
 
-    centerButton.addEventListener('click', async () => {
-        // Deduct one ticket when starting the game
+    playButton.addEventListener('click', async () => {
         if (tickets > 0) {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
@@ -111,10 +86,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         startScreen.style.display = 'none';
-        footer.style.display = 'none';  // Hide footer when game starts
+        footer.style.display = 'none';
+        header.style.display = 'none'; 
         startMusic();
         initGame();
-        gameLoop();
+        lastTimestamp = performance.now();
+        requestAnimationFrame(gameLoop);
     });
 
     tasksButton.addEventListener('click', () => {
@@ -211,30 +188,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         return /Mobi|Android/i.test(navigator.userAgent);
     }
 
-function addNewTile() {
-    const attempts = 100;
-    const lastColumn = tiles.length > 0 ? Math.floor(tiles[tiles.length - 1].x / (TILE_WIDTH + SEPARATOR)) : -1;
-
-    for (let i = 0; i < attempts; i++) {
-        let newColumn;
-        do {
-            newColumn = Math.floor(Math.random() * COLUMNS);
-        } while (newColumn === lastColumn);
-
-        const newTileX = newColumn * (TILE_WIDTH + SEPARATOR);
-        const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
-
-        if (!tiles.some(tile => {
-            const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
-            return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
-                tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
-        })) {
-            tiles.push(new Tile(newTileX, newTileY));
-            break;
+    function addNewTile() {
+        const attempts = 100;
+        for (let i = 0; i < attempts; i++) {
+            const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
+            const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
+            if (!tiles.some(tile => {
+                const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
+                return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
+                    tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
+            })) {
+                tiles.push(new Tile(newTileX, newTileY));
+                break;
+            }
         }
     }
-}
-
 
     function handleClick(event) {
         if (!gameRunning) return;
