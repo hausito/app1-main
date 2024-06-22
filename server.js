@@ -59,6 +59,7 @@ app.get('/getUserData', async (req, res) => {
 });
 
 
+
 app.get('/topUsers', async (req, res) => {
     try {
         // Assuming you have a function to fetch top users from the database
