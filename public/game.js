@@ -14,9 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
 
-    // Prevent default iOS touch behavior
-    canvas.style.touchAction = 'none';
-
     const startScreen = document.getElementById('startScreen');
     const playButton = document.getElementById('playButton');
     const tasksButton = document.getElementById('tasksButton');
@@ -31,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe?.user;
 
+    // Set username or fallback to "Username"
     if (user) {
         userInfo.textContent = user.username || `${user.first_name} ${user.last_name}`;
     } else {
@@ -40,6 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let points = 0;
     let tickets = 0;
 
+    // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
         try {
             const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
@@ -64,6 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
 
+            // Update tickets on the server
             try {
                 const response = await fetch('/updateTickets', {
                     method: 'POST',
@@ -109,10 +109,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const BORDER_COLOR = '#FBEAEB';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
-    const TOUCH_FEEDBACK_COLOR = 'rgba(255, 255, 0, 0.5)'; // Yellow with 50% opacity
 
     const COLUMNS = 4;
-    const SEPARATOR = 0;
+    const SEPARATOR = 0; // No space between tiles
     const VERTICAL_GAP = 5;
     const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
@@ -123,17 +122,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     let tiles = [];
     let score = 0;
     let gameRunning = true;
-    let touchStartY = null;
 
     class Tile {
-        constructor(x, y, height = TILE_HEIGHT) {
+        constructor(x, y, isLong = false) {
             this.x = x;
             this.y = y;
             this.width = TILE_WIDTH;
-            this.height = height;
+            this.height = TILE_HEIGHT;
             this.clicked = false;
             this.opacity = 1;
-            this.touchFeedback = false; // To indicate touch feedback
+            this.isLong = isLong; // Indicate if the tile is long
+            this.holdStartTime = null; // Track when the hold starts
+            this.holdDuration = 2000; // Duration to hold in ms (2 seconds)
         }
 
         move(speed) {
@@ -148,11 +148,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             ctx.globalAlpha = this.opacity;
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.globalAlpha = 1;
-
-            if (this.touchFeedback) {
-                ctx.fillStyle = TOUCH_FEEDBACK_COLOR;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
         }
 
         isClicked(mouseX, mouseY) {
@@ -174,38 +169,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 this.opacity -= 0.05;
             }
         }
-    }
 
-    class LongTile extends Tile {
-        constructor(x, y) {
-            super(x, y, TILE_HEIGHT * 2); // Double the height for long tiles
-            this.holdProgress = 0;
-            this.holding = false;
-        }
-
-        startHolding() {
-            this.holding = true;
-        }
-
-        continueHolding() {
-            if (this.holding) {
-                this.holdProgress += 0.05; // Adjust this value as needed
-            }
-        }
-
-        stopHolding() {
-            this.holding = false;
-        }
-
-        isFullyHeld() {
-            return this.holdProgress >= 1;
-        }
-
-        draw() {
-            super.draw();
-            if (this.holding) {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.fillRect(this.x, this.y, this.width, this.height * this.holdProgress);
+        updateHeight(deltaTime) {
+            if (this.clicked && this.isLong) {
+                const elapsedTime = performance.now() - this.holdStartTime;
+                const percentComplete = elapsedTime / this.holdDuration;
+                this.height = TILE_HEIGHT * (1 - percentComplete);
+                if (this.height <= 0) {
+                    this.height = 0;
+                    this.opacity = 0;
+                }
             }
         }
     }
@@ -215,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 0; i < 4; i++) {
             const x = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
             const y = -(i * (TILE_HEIGHT + VERTICAL_GAP)) - TILE_HEIGHT;
-            tiles.push(Math.random() > 0.5 ? new Tile(x, y) : new LongTile(x, y));
+            tiles.push(new Tile(x, y));
         }
         score = 0;
         TILE_SPEED = 4;
@@ -226,87 +199,87 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    function isMobileDevice() {
+        return /Mobi|Android/i.test(navigator.userAgent);
+    }
+
     function addNewTile() {
         const attempts = 100;
+        let addedTile = false;
+
         for (let i = 0; i < attempts; i++) {
             const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
             const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
-            if (!tiles.some(tile => {
+            const isLong = Math.random() < 0.2; // 20% chance of being a long tile
+
+            const conflict = tiles.some(tile => {
                 const rect = { x: newTileX, y: newTileY, width: TILE_WIDTH, height: TILE_HEIGHT };
                 return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
                     tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
-            })) {
-                tiles.push(Math.random() > 0.5 ? new Tile(newTileX, newTileY) : new LongTile(newTileX, newTileY));
+            });
+
+            const sameLineConflict = tiles.some(tile => tile.x === newTileX && (tile.isLong || isLong));
+
+            if (!conflict && !sameLineConflict) {
+                tiles.push(new Tile(newTileX, newTileY, isLong));
+                addedTile = true;
                 break;
             }
         }
+
+        if (!addedTile) {
+            const newTileX = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
+            const newTileY = Math.min(...tiles.map(tile => tile.y)) - TILE_HEIGHT - VERTICAL_GAP;
+            tiles.push(new Tile(newTileX, newTileY));
+        }
+    }
+
+    function handleMouseDown(event) {
+        handleHoldStart(event.clientX, event.clientY);
+    }
+
+    function handleMouseUp(event) {
+        handleHoldEnd();
     }
 
     function handleTouchStart(event) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        handleHoldStart(touch.clientX, touch.clientY);
+    }
+
+    function handleTouchEnd(event) {
+        handleHoldEnd();
+    }
+
+    function handleHoldStart(clientX, clientY) {
         if (!gameRunning) return;
 
-        event.preventDefault();
-
-        const touch = event.touches[0];
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
         const scaleY = canvas.height / rect.height;
-        const mouseX = (touch.clientX - rect.left) * scaleX;
-        const mouseY = (touch.clientY - rect.top) * scaleY;
-
-        touchStartY = mouseY;
+        const mouseX = (clientX - rect.left) * scaleX;
+        const mouseY = (clientY - rect.top) * scaleY;
 
         tiles.forEach(tile => {
             if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
-                tile.touchFeedback = true; // Show touch feedback
-                if (tile instanceof LongTile) {
-                    tile.startHolding();
-                } else {
-                    tile.startDisappearing();
-                    score++;
-                    addNewTile();
+                tile.startDisappearing();
+                if (tile.isLong) {
+                    tile.holdStartTime = performance.now();
                 }
+                score++;
+                addNewTile();
             }
         });
     }
 
-    function handleTouchMove(event) {
+    function handleHoldEnd() {
         if (!gameRunning) return;
-
-        event.preventDefault();
-
-        const touch = event.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mouseX = (touch.clientX - rect.left) * scaleX;
-        const mouseY = (touch.clientY - rect.top) * scaleY;
-
-        if (touchStartY !== null) {
-            tiles.forEach(tile => {
-                if (tile instanceof LongTile && tile.isClicked(mouseX, mouseY) && tile.holding) {
-                    tile.continueHolding();
-                    if (tile.isFullyHeld()) {
-                        tile.startDisappearing();
-                        score++;
-                        addNewTile();
-                    }
-                }
-            });
-        }
-    }
-
-    function handleTouchEnd(event) {
-        if (!gameRunning) return;
-
-        event.preventDefault();
-        touchStartY = null;
 
         tiles.forEach(tile => {
-            tile.touchFeedback = false; // Remove touch feedback
-            if (tile instanceof LongTile && tile.holding) {
-                tile.stopHolding();
-                if (!tile.isFullyHeld()) {
+            if (tile.clicked && tile.isLong && tile.holdStartTime) {
+                const elapsedTime = performance.now() - tile.holdStartTime;
+                if (elapsedTime < tile.holdDuration) {
                     gameRunning = false;
                     gameOver();
                 }
@@ -314,33 +287,52 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    canvas.addEventListener('mouseup', handleMouseUp);
     canvas.addEventListener('touchstart', handleTouchStart);
-    canvas.addEventListener('touchmove', handleTouchMove);
     canvas.addEventListener('touchend', handleTouchEnd);
 
-    function handleClick(event) {
-        if (!gameRunning) return;
+    function gameOver() {
+        alert('Game Over! Your score is: ' + score);
+        stopMusic();
 
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const mouseX = (event.clientX - rect.left) * scaleX;
-        const mouseY = (event.clientY - rect.top) * scaleY;
+        points += score;
+        userPoints.textContent = `Points: ${points}`;
 
-        let clickedOnTile = false;
-        tiles.forEach(tile => {
-            if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
-                tile.startDisappearing();
-                clickedOnTile = true;
-                score++;
-                addNewTile();
+        // Update points on the server
+        try {
+            const response = fetch('/updatePoints', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: userInfo.textContent, points }),
+            });
+
+            const result = response.json();
+            if (!result.success) {
+                console.error('Error updating points:', result.error);
             }
-        });
+        } catch (error) {
+            console.error('Error updating points:', error);
+        }
 
-        if (!clickedOnTile) {
-            gameRunning = false;
-            gameOver();
+        startScreen.style.display = 'flex';
+        footer.style.display = 'block';
+        header.style.display = 'flex';
+    }
+
+    function startMusic() {
+        if (backgroundMusic.paused) {
+            backgroundMusic.play().catch(function(error) {
+                console.error('Error playing audio:', error);
+            });
+        }
+    }
+
+    function stopMusic() {
+        if (!backgroundMusic.paused) {
+            backgroundMusic.pause();
         }
     }
 
@@ -358,6 +350,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tiles.forEach(tile => {
             tile.move(TILE_SPEED * deltaTime * 60); 
             tile.updateOpacity();
+            tile.updateHeight(deltaTime);
             if (tile.isOutOfBounds()) {
                 outOfBounds = true;
             }
@@ -376,6 +369,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             addNewTile();
         }
 
+        // Draw vertical lines
         ctx.strokeStyle = BORDER_COLOR;
         ctx.lineWidth = 2;
         for (let i = 1; i < COLUMNS; i++) {
@@ -397,63 +391,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         TILE_SPEED += SPEED_INCREMENT * deltaTime * 60; 
 
         requestAnimationFrame(gameLoop);
-    }
-
-    function startMusic() {
-        backgroundMusic.play().catch(function(error) {
-            console.error('Error playing audio:', error);
-        });
-    }
-
-    tg.onEvent('themeChanged', function() {
-        const themeParams = tg.themeParams;
-        if (themeParams && themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-            document.body.style.backgroundColor = themeParams.bg_color;
-        }
-    });
-
-    tg.ready().then(function() {
-        if (tg.themeParams) {
-            const themeParams = tg.themeParams;
-            if (themeParams.bg_color && !themeParams.bg_color.includes('unset') && !themeParams.bg_color.includes('none')) {
-                document.body.style.backgroundColor = themeParams.bg_color;
-            }
-        }
-        if (tg.initDataUnsafe?.user) {
-            userInfo.textContent = tg.initDataUnsafe.user.username || `${tg.initDataUnsafe.user.first_name} ${tg.initDataUnsafe.user.last_name}`;
-        } else {
-            userInfo.textContent = 'Username';
-        }
-        if (tg.initDataUnsafe?.is_explicitly_enabled) {
-            startMusic();
-        }
-    });
-
-    async function gameOver() {
-        await saveUser(userInfo.textContent, score);
-        const redirectURL = `transition.html?score=${score}`;
-        window.location.replace(redirectURL);
-    }
-
-    async function saveUser(username, scoreToAdd) {
-        try {
-            const response = await fetch('/saveUser', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ username, points: scoreToAdd }),
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                points = result.data.points; 
-                userPoints.textContent = `Points: ${points}`; 
-            } else {
-                console.error('Error saving user:', result.error);
-            }
-        } catch (error) {
-            console.error('Error saving user:', error);
-        }
     }
 });
