@@ -41,14 +41,14 @@ app.get('/getUserData', async (req, res) => {
 
         if (result.rows.length > 0) {
             // User exists
-            res.status(200).json({ success: true, points: result.rows[0].points, tickets: result.rows[0].tickets, newUser: false });
+            res.status(200).json({ success: true, points: result.rows[0].points, tickets: result.rows[0].tickets, isNewUser: false });
         } else {
             // User does not exist, insert new user with default values
             const insertQuery = 'INSERT INTO users (username, points, tickets) VALUES ($1, $2, $3) RETURNING points, tickets';
             const insertValues = [username, 0, 100];
             const insertResult = await client.query(insertQuery, insertValues);
 
-            res.status(200).json({ success: true, points: insertResult.rows[0].points, tickets: insertResult.rows[0].tickets, newUser: true });
+            res.status(200).json({ success: true, points: insertResult.rows[0].points, tickets: insertResult.rows[0].tickets, isNewUser: true });
         }
 
         client.release();
