@@ -27,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 // Endpoint to fetch initial user data (points and tickets)
+// Endpoint to fetch initial user data (points, tickets, and check if new user)
 app.get('/getUserData', async (req, res) => {
     try {
         const { username } = req.query;
@@ -44,7 +45,7 @@ app.get('/getUserData', async (req, res) => {
         } else {
             // User does not exist, insert new user with default values
             const insertQuery = 'INSERT INTO users (username, points, tickets) VALUES ($1, $2, $3) RETURNING points, tickets';
-            const insertValues = [username, 0, 100]; // Assuming new users start with 100 tickets
+            const insertValues = [username, 0, 100];
             const insertResult = await client.query(insertQuery, insertValues);
 
             res.status(200).json({ success: true, points: insertResult.rows[0].points, tickets: insertResult.rows[0].tickets, newUser: true });
@@ -56,6 +57,7 @@ app.get('/getUserData', async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
 
 app.get('/topUsers', async (req, res) => {
     try {
