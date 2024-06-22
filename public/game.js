@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.loop = true;
     backgroundMusic.volume = 0.5;
 
+    // Prevent default iOS touch behavior
+    canvas.style.touchAction = 'none';
+
     const startScreen = document.getElementById('startScreen');
     const playButton = document.getElementById('playButton');
     const tasksButton = document.getElementById('tasksButton');
@@ -28,7 +31,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe?.user;
 
-    // Set username or fallback to "Username"
     if (user) {
         userInfo.textContent = user.username || `${user.first_name} ${user.last_name}`;
     } else {
@@ -38,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     let points = 0;
     let tickets = 0;
 
-    // Fetch initial user data (points and tickets)
     const fetchUserData = async () => {
         try {
             const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
@@ -63,7 +64,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
 
-            // Update tickets on the server
             try {
                 const response = await fetch('/updateTickets', {
                     method: 'POST',
@@ -102,19 +102,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         alert('Upgrade: Coming Soon!');
     });
 
-   const WIDTH = canvas.width;
+    const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
+
     const TILE_COLOR = '#2F3C7E';
     const BORDER_COLOR = '#FBEAEB';
     const SKY_BLUE = '#87CEEB';
     const SHADOW_COLOR = '#000080';
+
     const COLUMNS = 4;
     const SEPARATOR = 0;
     const VERTICAL_GAP = 5;
     const TILE_WIDTH = (WIDTH - (COLUMNS - 1) * SEPARATOR) / COLUMNS;
     const TILE_HEIGHT = HEIGHT / 4 - VERTICAL_GAP;
+
     let TILE_SPEED;
     const SPEED_INCREMENT = 0.0018;
+
     let tiles = [];
     let score = 0;
     let gameRunning = true;
@@ -169,20 +173,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         constructor(x, y) {
             super(x, y, TILE_HEIGHT * 2); // Double the height for long tiles
             this.holdProgress = 0;
+            this.holding = false;
         }
 
         startHolding() {
-            this.holdProgress = 1;
+            this.holding = true;
         }
 
         continueHolding() {
-            if (this.holdProgress > 0) {
+            if (this.holding) {
                 this.holdProgress += 0.05; // Adjust this value as needed
             }
         }
 
         stopHolding() {
-            this.holdProgress = 0;
+            this.holding = false;
         }
 
         isFullyHeld() {
@@ -191,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         draw() {
             super.draw();
-            if (this.holdProgress > 0) {
+            if (this.holding) {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
                 ctx.fillRect(this.x, this.y, this.width, this.height * this.holdProgress);
             }
@@ -203,7 +208,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (let i = 0; i < 4; i++) {
             const x = Math.floor(Math.random() * COLUMNS) * (TILE_WIDTH + SEPARATOR);
             const y = -(i * (TILE_HEIGHT + VERTICAL_GAP)) - TILE_HEIGHT;
-            tiles.push(Math.random() > 0.5 ? new Tile(x, y) : new LongTile(x, y)); // Randomly choose between Tile and LongTile
+            tiles.push(Math.random() > 0.5 ? new Tile(x, y) : new LongTile(x, y));
         }
         score = 0;
         TILE_SPEED = 4;
@@ -224,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return tile.y < rect.y + rect.height && tile.y + tile.height > rect.y &&
                     tile.x < rect.x + rect.width && tile.x + tile.width > rect.x;
             })) {
-                tiles.push(Math.random() > 0.5 ? new Tile(newTileX, newTileY) : new LongTile(newTileX, newTileY)); // Randomly choose between Tile and LongTile
+                tiles.push(Math.random() > 0.5 ? new Tile(newTileX, newTileY) : new LongTile(newTileX, newTileY));
                 break;
             }
         }
@@ -232,6 +237,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function handleTouchStart(event) {
         if (!gameRunning) return;
+
+        event.preventDefault();
 
         const touch = event.touches[0];
         const rect = canvas.getBoundingClientRect();
@@ -258,6 +265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleTouchMove(event) {
         if (!gameRunning) return;
 
+        event.preventDefault();
+
         const touch = event.touches[0];
         const rect = canvas.getBoundingClientRect();
         const scaleX = canvas.width / rect.width;
@@ -265,26 +274,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mouseX = (touch.clientX - rect.left) * scaleX;
         const mouseY = (touch.clientY - rect.top) * scaleY;
 
-        tiles.forEach(tile => {
-            if (tile instanceof LongTile && tile.holdProgress > 0) {
-                tile.continueHolding();
-                if (mouseY < touchStartY) {
-                    tile.stopHolding();
+        if (touchStartY !== null) {
+            const distanceMoved = mouseY - touchStartY;
+
+            tiles.forEach(tile => {
+                if (tile instanceof LongTile && tile.isClicked(mouseX, mouseY) && tile.holding) {
+                    tile.continueHolding();
+                    if (tile.isFullyHeld()) {
+                        tile.startDisappearing();
+                        score++;
+                        addNewTile();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     function handleTouchEnd(event) {
         if (!gameRunning) return;
 
+        event.preventDefault();
+        touchStartY = null;
+
         tiles.forEach(tile => {
-            if (tile instanceof LongTile && tile.holdProgress > 0) {
-                if (tile.isFullyHeld()) {
-                    score++;
-                    addNewTile();
-                    tile.startDisappearing();
-                } else {
+            if (tile instanceof LongTile && tile.holding) {
+                tile.stopHolding();
+                if (!tile.isFullyHeld()) {
                     gameRunning = false;
                     gameOver();
                 }
@@ -292,6 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    canvas.addEventListener('click', handleClick);
     canvas.addEventListener('touchstart', handleTouchStart);
     canvas.addEventListener('touchmove', handleTouchMove);
     canvas.addEventListener('touchend', handleTouchEnd);
@@ -308,14 +324,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         let clickedOnTile = false;
         tiles.forEach(tile => {
             if (tile.isClicked(mouseX, mouseY) && !tile.clicked) {
-                if (tile instanceof LongTile) {
-                    tile.startHolding();
-                } else {
-                    tile.startDisappearing();
-                    clickedOnTile = true;
-                    score++;
-                    addNewTile();
-                }
+                tile.startDisappearing();
+                clickedOnTile = true;
+                score++;
+                addNewTile();
             }
         });
 
@@ -324,8 +336,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameOver();
         }
     }
-
-    canvas.addEventListener('click', handleClick);
 
     let lastTimestamp = 0;
 
@@ -359,7 +369,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             addNewTile();
         }
 
-        // Draw vertical lines
         ctx.strokeStyle = BORDER_COLOR;
         ctx.lineWidth = 2;
         for (let i = 1; i < COLUMNS; i++) {
