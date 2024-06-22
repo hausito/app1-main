@@ -39,22 +39,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     let tickets = 0;
 
     // Fetch initial user data (points and tickets)
-    const fetchUserData = async () => {
-        try {
-            const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
-            const data = await response.json();
-            if (data.success) {
-                points = data.points;
-                tickets = data.tickets;
-                userPoints.textContent = `Points: ${points}`;
-                userTickets.textContent = `Tickets: ${tickets}`;
-            } else {
-                console.error('Failed to fetch user data:', data.error);
+ let isNewUser = false; // Flag to track if user is new
+
+const fetchUserData = async () => {
+    try {
+        const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
+        const data = await response.json();
+        if (data.success) {
+            points = data.points;
+            tickets = data.tickets;
+            userPoints.textContent = `Points: ${points}`;
+            userTickets.textContent = `Tickets: ${tickets}`;
+
+            // Check if new user (not found in database)
+            if (data.newUser) {
+                isNewUser = true;
+                showWelcomePopup(userInfo.textContent);
             }
-        } catch (error) {
-            console.error('Error fetching user data:', error);
+        } else {
+            console.error('Failed to fetch user data:', data.error);
         }
-    };
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+    }
+};
+
+function showWelcomePopup(username) {
+    const popupContainer = document.getElementById('popupContainer');
+    const popupMessage = document.getElementById('popupMessage');
+    popupMessage.textContent = `Welcome, new user ${username}! You've earned 100 tickets.`;
+    popupContainer.classList.remove('hidden');
+
+    // Optionally, hide the pop-up after a few seconds
+    setTimeout(() => {
+        popupContainer.classList.add('hidden');
+    }, 5000); // 5 seconds
+}
 
     fetchUserData();
 
