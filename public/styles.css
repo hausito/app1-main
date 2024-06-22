@@ -27,7 +27,9 @@ canvas {
     height: 100%;
     background-color: transparent;
 }
-
+#points {
+    margin-right: 20px;
+}
 #header {
     position: absolute;
     top: 0;
