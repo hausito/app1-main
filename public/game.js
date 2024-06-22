@@ -15,14 +15,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     backgroundMusic.volume = 0.5;
 
     const startScreen = document.getElementById('startScreen');
-    const playButton = document.getElementById('playButton');
-    const tasksButton = document.getElementById('tasksButton');
-    const upgradeButton = document.getElementById('upgradeButton');
+    const centerButton = document.getElementById('centerButton');
     const userInfo = document.getElementById('userInfo');
     const footer = document.getElementById('footer');
     const userPoints = document.getElementById('points');
-    const userTickets = document.getElementById('ticketsInfo');
-    const header = document.getElementById('header');
+    const userTickets = document.getElementById('tickets');
+
+    const welcomePopup = document.createElement('div');
+    welcomePopup.id = 'welcomePopup';
+    welcomePopup.style.position = 'fixed';
+    welcomePopup.style.top = '50%';
+    welcomePopup.style.left = '50%';
+    welcomePopup.style.transform = 'translate(-50%, -50%)';
+    welcomePopup.style.padding = '20px';
+    welcomePopup.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    welcomePopup.style.borderRadius = '10px';
+    welcomePopup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+    welcomePopup.style.textAlign = 'center';
+    welcomePopup.style.display = 'none';
+    document.body.appendChild(welcomePopup);
 
     // Initialize Telegram Web Apps API
     const tg = window.Telegram.WebApp;
@@ -38,46 +49,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     let points = 0;
     let tickets = 0;
 
-const fetchUserData = async () => {
-    try {
-        const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
-        const data = await response.json();
-        if (data.success) {
-            points = data.points;
-            tickets = data.tickets;
-            userPoints.textContent = `Points: ${points}`;
-            userTickets.textContent = `Tickets: ${tickets}`;
+    // Fetch initial user data (points and tickets)
+    const fetchUserData = async () => {
+        try {
+            const response = await fetch(`/getUserData?username=${encodeURIComponent(userInfo.textContent)}`);
+            const data = await response.json();
+            if (data.success) {
+                points = data.points;
+                tickets = data.tickets;
+                userPoints.textContent = `Points: ${points}`;
+                userTickets.textContent = `Tickets: ${tickets}`;
 
-            // Check if new user (not found in database)
-            if (data.newUser) {
-                isNewUser = true;
-                showWelcomePopup(userInfo.textContent);
+                if (data.isNewUser) {
+                    showWelcomePopup(userInfo.textContent, tickets);
+                }
+            } else {
+                console.error('Failed to fetch user data:', data.error);
             }
-        } else {
-            console.error('Failed to fetch user data:', data.error);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
         }
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-    }
-};
+    };
 
-function showWelcomePopup(username) {
-    const popupContainer = document.getElementById('popupContainer');
-    const popupMessage = document.getElementById('popupMessage');
-    popupMessage.textContent = `Welcome, new user ${username}! You've earned 100 tickets.`;
-    popupContainer.classList.remove('hidden');
+    const showWelcomePopup = (username, tickets) => {
+        welcomePopup.innerHTML = `<h2>Welcome, ${username}!</h2><p>You have earned 100 tickets.</p><p>Current Tickets: ${tickets}</p><button onclick="closeWelcomePopup()">Close</button>`;
+        welcomePopup.style.display = 'block';
+    };
 
-    // Optionally, hide the pop-up after a few seconds
-    setTimeout(() => {
-        popupContainer.classList.add('hidden');
-    }, 5000); // 5 seconds
-}
-
-
+    const closeWelcomePopup = () => {
+        welcomePopup.style.display = 'none';
+    };
 
     fetchUserData();
 
-    playButton.addEventListener('click', async () => {
+    centerButton.addEventListener('click', async () => {
+        // Deduct one ticket when starting the game
         if (tickets > 0) {
             tickets--;
             userTickets.textContent = `Tickets: ${tickets}`;
@@ -105,12 +111,10 @@ function showWelcomePopup(username) {
         }
 
         startScreen.style.display = 'none';
-        footer.style.display = 'none';
-        header.style.display = 'none'; 
+        footer.style.display = 'none';  // Hide footer when game starts
         startMusic();
         initGame();
-        lastTimestamp = performance.now();
-        requestAnimationFrame(gameLoop);
+        gameLoop();
     });
 
     tasksButton.addEventListener('click', () => {
