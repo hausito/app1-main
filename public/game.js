@@ -46,8 +46,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (data.success) {
                 points = data.points;
                 tickets = data.tickets;
-                userPoints.textContent = `Points: ${points}`;
-                userTickets.textContent = `Tickets: ${tickets}`;
+                userPoints.textContent = ` ${points}`;
+                userTickets.textContent = ` ${tickets}`;
             } else {
                 console.error('Failed to fetch user data:', data.error);
             }
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     playButton.addEventListener('click', async () => {
         if (tickets > 0) {
             tickets--;
-            userTickets.textContent = `Tickets: ${tickets}`;
+            userTickets.textContent = ` ${tickets}`;
 
             // Update tickets on the server
             try {
